@@ -1,0 +1,139 @@
+body{
+    background-color: #f1f1f1;
+}
+*{
+    margin: 0;
+    padding:0;
+    font-family: 'Poppins';
+}
+.top{
+    height: 8vh;
+    padding: 8px 16px;
+    background-color: #1d503a;
+    /* border-bottom: 0.5px solid #b0b0b0; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+.logo-img img{
+   width: 160px;
+}
+.nav-div{
+    background-color:#ffffff ;
+    width: 15%;
+    /* height:max-content; */
+    height: 100vh;
+    color: #1d503a;
+     padding: 0px 16px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+.navigations ul{
+ 
+    text-align: left;
+   
+    margin-top: 24px;
+    
+}
+.navigations a{
+    font-size: 16px;
+}
+.navigations ul li{
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
+.nav-li{
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    /* padding: 16px; */
+    padding: 16px 4px;
+    border-radius: 8px;
+   
+}
+.nav-li:hover{
+    background: #f1f1f1;
+    transition: 0.3s;
+    
+}
+.nav-li a{
+     text-decoration: none;
+     color: #1d503a;
+}
+.nav-li a:hover{
+     color: #004226;
+     transition: 0.1s;
+}
+
+/* .mainpage */
+.main-div{
+    display: flex;
+}
+
+.table-div{
+    padding: 26px;
+    width: 85%;
+    display: flex;
+    justify-content: center;
+}
+.table-div-content{
+    border-radius: 12px;
+    padding:  36px;
+    width:100%;
+    background-color: white;
+     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    
+}
+
+/* DASHBOARR */
+
+h2{
+    margin-bottom: 36px;
+}
+.add-search{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.search{
+    display: flex;
+    gap: 8px;
+}
+.btn-success{
+    background-color: #004226;
+    color: white;
+}
+.table-div table{
+    width: 100%;
+    /* background-color: aquamarine; */
+}
+.table-div{
+    width: 100%;
+}
+th{
+    background-color: #004226;
+    color: white;
+    
+}
+table, th, td {
+  /* border: 0.1px solid #b0b0b0; */
+  border-collapse: collapse;
+  padding: 8px 8px;
+  font-size: 16px;
+}
+tr {
+  border-bottom: 1px solid #ddd;
+}
+.buttons{
+    display: flex;
+    /* justify-content: center; */
+}
+.buttons a{
+    border-color: transparent;
+    border-style: none;
+    background-color:transparent;
+}
+tr:nth-child(even) {
+  background-color: #f1f1f1;
+}
