@@ -2,28 +2,27 @@
 // Include the database connection
 include '../db.php'; // Adjust the path to your database connection file
 
-// Fetch data from the MonitoringTable
-$query = "SELECT * FROM monitoring";
+// Fetch data from the ProductionTable
+$query = "SELECT * FROM production";
 $result = $conn->query($query);
 
 // Check if there are any results
 if ($result->num_rows > 0) {
-    $monitoringData = $result->fetch_all(MYSQLI_ASSOC);
+    $productionData = $result->fetch_all(MYSQLI_ASSOC);
 } else {
-    $monitoringData = [];
+    $productionData = [];
 }
 
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $supplierEvaluated = $_POST['supplierEvaluated'];
-    $supplierPOCreated = $_POST['supplierPOCreated'];
-    $gmApproved = $_POST['gmApproved'];
-    $supplierPOIssued = $_POST['supplierPOIssued'];
+    $finishing = $_POST['finishing'];
+    $packed = $_POST['packed'];
+    $inspected = $_POST['inspected'];
     $daysLeft = $_POST['daysLeft'];
 
     // Calculate the deadline based on the daysLeft value
-    $dateReceivedQuery = "SELECT dateReceived FROM monitoring WHERE poNumber = ?";
+    $dateReceivedQuery = "SELECT dateReceived FROM production WHERE poNumber = ?";
     $stmt = $conn->prepare($dateReceivedQuery);
     $stmt->bind_param("s", $poNumber);
     $stmt->execute();
@@ -36,21 +35,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     // Update query
     $updateQuery = "
-        UPDATE monitoring 
-        SET supplierEvaluated = ?, 
-            supplierPOCreated = ?, 
-            gmApproved = ?, 
-            supplierPOIssued = ?, 
+        UPDATE production 
+        SET finishing = ?, 
+            packed = ?, 
+            inspected = ?, 
             daysLeft = ?, 
             deadline = ? 
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssiss", 
-        $supplierEvaluated, 
-        $supplierPOCreated, 
-        $gmApproved, 
-        $supplierPOIssued, 
+        "ssssss", 
+        $finishing, 
+        $packed, 
+        $inspected, 
         $daysLeft, 
         $deadline, 
         $poNumber
@@ -76,7 +73,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Table</title>
+    <title>Production Table</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
@@ -88,10 +85,9 @@ $conn->close();
                 <thead>
                     <tr>
                         <th>PO No.</th>
-                        <th>Supplier Evaluated</th>
-                        <th>Supplier PO Created</th>
-                        <th>GM Approved</th>
-                        <th>Supplier PO Issued</th>
+                        <th>Finishing</th>
+                        <th>Packed</th>
+                        <th>Inspected</th>
                         <th>Date Received</th>
                         <th>Deadline</th>
                         <th>Days Left</th>
@@ -99,14 +95,13 @@ $conn->close();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($monitoringData)) : ?>
-                        <?php foreach ($monitoringData as $data) : ?>
+                    <?php if (!empty($productionData)) : ?>
+                        <?php foreach ($productionData as $data) : ?>
                             <tr>
                                 <td><?= htmlspecialchars($data['poNumber']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierEvaluated']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOCreated']); ?></td>
-                                <td><?= htmlspecialchars($data['gmApproved']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOIssued']); ?></td>
+                                <td><?= htmlspecialchars($data['finishing']); ?></td>
+                                <td><?= htmlspecialchars($data['packed']); ?></td>
+                                <td><?= htmlspecialchars($data['inspected']); ?></td>
                                 <td><?= htmlspecialchars($data['dateReceived']); ?></td>
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
@@ -117,12 +112,11 @@ $conn->close();
                             </tr>
 
                             <!-- Modal for editing each row -->
-                          <!-- Modal for editing each row -->
-<div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
+                           <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Monitoring Record</h5>
+                <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Production Record</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -133,44 +127,37 @@ $conn->close();
 
                     <!-- Fields for updating -->
                     <div class="form-group">
-                        <label>Supplier Evaluated</label>
-                        <select name="supplierEvaluated" class="form-control">
-                            <option <?= $data['supplierEvaluated'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                            <option <?= $data['supplierEvaluated'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                            <option <?= $data['supplierEvaluated'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                        <label>Finishing</label>
+                        <select name="finishing" class="form-control">
+                            <option <?= $data['finishing'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                            <option <?= $data['finishing'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                            <option <?= $data['finishing'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Supplier PO Created</label>
-                        <select name="supplierPOCreated" class="form-control">
-                            <option <?= $data['supplierPOCreated'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                            <option <?= $data['supplierPOCreated'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                            <option <?= $data['supplierPOCreated'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                        <label>Packed</label>
+                        <select name="packed" class="form-control">
+                            <option <?= $data['packed'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                            <option <?= $data['packed'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                            <option <?= $data['packed'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>GM Approved</label>
-                        <select name="gmApproved" class="form-control">
-                            <option <?= $data['gmApproved'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                            <option <?= $data['gmApproved'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                            <option <?= $data['gmApproved'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Supplier PO Issued</label>
-                        <select name="supplierPOIssued" class="form-control">
-                            <option <?= $data['supplierPOIssued'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                            <option <?= $data['supplierPOIssued'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                            <option <?= $data['supplierPOIssued'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                        <label>Inspected</label>
+                        <select name="inspected" class="form-control">
+                            <option <?= $data['inspected'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                            <option <?= $data['inspected'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                            <option <?= $data['inspected'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Days Left</label>
-                        <input type="number" name="daysLeft" class="form-control" value="<?= $data['daysLeft']; ?>" required>
+                        <input type="number" name="daysLeft" class="form-control" id="daysLeft<?= $data['poNumber']; ?>" value="<?= $data['daysLeft']; ?>" required>
                     </div>
+
                     <div class="form-group">
                         <label>Deadline</label>
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['deadline']); ?>" readonly>
+                        <input type="text" class="form-control" id="deadline<?= $data['poNumber']; ?>" value="<?= htmlspecialchars($data['deadline']); ?>" readonly>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -181,11 +168,31 @@ $conn->close();
         </div>
     </div>
 </div>
+<script>
+    // Function to calculate and update the deadline when the daysLeft value changes
+    document.getElementById('daysLeft<?= $data['poNumber']; ?>').addEventListener('input', function() {
+        var daysLeft = parseInt(this.value);
+        var dateReceived = '<?= $data['dateReceived']; ?>'; // Fetch the dateReceived from PHP
+
+        // Check if the input value is a valid number
+        if (!isNaN(daysLeft)) {
+            // Calculate the new deadline
+            var deadlineDate = new Date(dateReceived);
+            deadlineDate.setDate(deadlineDate.getDate() + daysLeft);
+
+            // Format the deadline date as YYYY-MM-DD
+            var deadline = deadlineDate.toISOString().split('T')[0];
+
+            // Update the readonly field with the new deadline
+            document.getElementById('deadline<?= $data['poNumber']; ?>').value = deadline;
+        }
+    });
+</script>
 
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="9">No data found in the Monitoring Table.</td>
+                            <td colspan="8">No data found in the Production Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

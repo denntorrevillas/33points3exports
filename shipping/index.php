@@ -27,7 +27,7 @@
         <div class="nav-div">
             <div class="navigations">
                 <br>
-                <h4><b>Monitoring Department</b></h4>
+                <h4><b>Shipping Department</b></h4>
                <hr>
                <ul>       
                     <div class="nav-li">
@@ -36,8 +36,8 @@
                     </div>
 
                     <div class="nav-li">
-                        <img src="../assets/production.png" alt="">
-                        <a href="?page=production">Production Department</a>
+                        <img src="../assets/shipping.png" alt="">
+                        <a href="?page=shipping">Shipping Department</a>
                     </div>
 
                     <div class="nav-li">
@@ -71,7 +71,7 @@
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'accounting', 'monitoring', 'production']; // Whitelist pages
+                        $allowed_pages = ['dashboard', 'accounting', 'monitoring','shipping']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";
