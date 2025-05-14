@@ -91,6 +91,7 @@ $conn->close();
                         <th>Date Received</th>
                         <th>Deadline</th>
                         <th>Days Left</th>
+                        <th>Lead Time</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -104,6 +105,8 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['inspected']); ?></td>
                                 <td><?= htmlspecialchars($data['dateReceived']); ?></td>
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
+                                
+                                <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td>
                                 <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">

@@ -93,9 +93,13 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                             <input type="text" name="buyer" class="form-control" id="buyer" placeholder="Enter Buyer Name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="deliveryDays" class="form-label">Delivery Days</label>
-                            <input type="number" name="deliveryDays" class="form-control" id="deliveryDaysInput" placeholder="Enter Delivery Days" required>
+                            <label for="leadTime" class="form-label"> Lead Time</label>
+                            <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required>
                         </div>
+
+                        
+                        
+                       
                         <div class="mb-3">
                             <label for="deliveryDate" class="form-label">Ship Date</label>
                             <input type="date" name="deliveryDate" class="form-control" id="deliveryDate" readonly>
