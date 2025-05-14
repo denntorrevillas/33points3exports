@@ -6,21 +6,36 @@ body{
     padding:0;
     font-family: 'Poppins';
 }
-.top{
-    /* height: 10vh; */
-    padding-top:2px 36px;
-
+.top {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* ensures it stays above other content */
+    
+    padding: 0px 24px;
     background-color: #1d503a;
-    /* border-bottom: 0.5px solid #b0b0b0; */
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
+
+#date-time{
+    text-align: right;
+    font-size: 12px;
+    color: white;
+}
+.user-div{
+    display: flex;
+    flex-direction: column;
+    
+}
 .logo-img img{
-   width: 180px;
+   width: 140px;
 }
 .nav-div{
+    position: sticky;
+    top: 0;
+    /* z-index: 1000; */
     background-color:#ffffff ;
     width: 20%;
     /* height:max-content; */
@@ -35,6 +50,10 @@ body{
    
     margin-top: 24px;
     
+}
+.navigations{
+    position: sticky;
+    top: 0;
 }
 .navigations a{
     font-size: 16px;
@@ -91,9 +110,7 @@ body{
 
 /* DASHBOARR */
 
-h2{
-    margin-bottom: 36px;
-}
+
 .add-search{
     display: flex;
     justify-content: space-between;
@@ -113,6 +130,15 @@ h2{
 }
 .table-div{
     width: 100%;
+    
+}
+/* .table-div table{
+    height: 600px;
+    overflow: auto;
+} */
+
+* button{
+    height: 36px;
 }
 th{
     background-color: #004226;
@@ -122,12 +148,17 @@ th{
 table, th, td {
   /* border: 0.1px solid #b0b0b0; */
   border-collapse: collapse;
-  padding: 8px 8px;
-  font-size: 16px;
+  padding: 8px 4px;
+  font-size: 14px;
+    vertical-align: middle;
+
+  
 }
 tr {
   border-bottom: 1px solid #ddd;
+  
 }
+
 .buttons{
     display: flex;
     /* justify-content: center; */
@@ -137,6 +168,19 @@ tr {
     border-style: none;
     background-color:transparent;
 }
+
 tr:nth-child(even) {
   background-color: #f1f1f1;
 }
+    .user-logout {
+      display: flex;
+      align-items: center;
+      
+    }
+    
+    .user-logout p {
+      margin: 0;
+      font-size: 16px;
+      color: white;
+    }
+    

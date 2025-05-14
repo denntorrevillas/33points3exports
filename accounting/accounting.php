@@ -75,8 +75,9 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td>
-                                <!-- Edit Button to Open Modal -->
-                                <button class="btn btn-primary" data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">Edit</button>
+                                <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px;  width: 20px;">
+                                </button>
                             </td>
                         </tr>
 

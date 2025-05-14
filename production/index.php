@@ -37,7 +37,7 @@
 
                     <div class="nav-li">
                         <img src="../assets/production.png" alt="">
-                        <a href="?page=production">Production Department</a>
+                        <a href="?page=production">Production</a>
                     </div>
 
                     <div class="nav-li">

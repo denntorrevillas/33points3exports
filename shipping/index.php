@@ -15,11 +15,13 @@
         <div class="logo-img">
             <img src="../assets/logo1.png" alt="">
         </div>
-        <div class="user-logout">
-           
-             
-                <div id="date-time" ></div>
-          
+        <div class="user-div" >
+                <div class="user-logout">
+                     <img src="../assets/user.png" alt="">
+                      <p>Name of the  user</p>
+                </div>
+                  <h6 id="date-time"></h6>
+               
         </div>
     </div>
     <div class="main-div">

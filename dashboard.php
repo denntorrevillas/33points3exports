@@ -7,5 +7,6 @@
 </head>
 <body>
      <h2><b>Dashboard</b></h2>
+     <hr>
 </body>
 </html>

@@ -14,16 +14,20 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
     <title>Dashboard</title>
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Add Order</b></h2>
+        <hr>
 
         <div class="d-flex justify-content-between align-items-center my-3">
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrderModal">
                 Add Order
             </button>
-            <!-- <div class="search w-50">
+            <div class="search w-20">
                 <input class="form-control" type="text" placeholder="Search Order">
-            </div> -->
+                  <button type="button" class="btn btn-success">
+                      SEARCH
+                    </button>
+            </div>
             
         </div>
 
@@ -36,7 +40,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
         <?php endif; ?>
 
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table >
                 <thead>
                     <tr>
                         <th>PO No.</th>
