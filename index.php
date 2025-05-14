@@ -48,12 +48,12 @@
 
                     <div class="nav-li">
                         <img src="assets/marketing.png" alt="">
-                        <a href="?page=marketing">Marketing Department</a>
+                        <a href="?page=marketing">Marketing</a>
                     </div> 
 
                     <div class="nav-li">
                         <img src="assets/history.png" alt="">
-                        <a href="?page=marketing_history">Marketing History</a>
+                        <a href="?page=marketing_history">History</a>
                     </div>   
                     
                     <div class="nav-li">
