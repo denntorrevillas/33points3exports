@@ -20,9 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $loading = $_POST['loading'];
     $transported = $_POST['transported'];
     $delivered_to_customer = $_POST['delivered_to_customer'];
-    $daysLeft = $_POST['daysLeft'];
+    $leadTime = $_POST['leadTime'];  // Get Lead Time input
 
-    // Calculate the deadline based on the daysLeft value
+    // Fetch the dateReceived for the specified PO Number
     $dateReceivedQuery = "SELECT dateReceived FROM shipping WHERE poNumber = ?";
     $stmt = $conn->prepare($dateReceivedQuery);
     $stmt->bind_param("s", $poNumber);
@@ -31,8 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $stmt->fetch();
     $stmt->close();
 
-    // Calculate deadline
-    $deadline = date('Y-m-d', strtotime("$dateReceived +$daysLeft days"));
+    // Calculate the deadline based on the leadTime value
+    $deadline = date('Y-m-d', strtotime("$dateReceived +$leadTime days"));
+
+    // Calculate the daysLeft (difference between the deadline and current date)
+    $daysLeft = (strtotime($deadline) - time()) / (60 * 60 * 24); // in days
 
     // Update query
     $updateQuery = "
@@ -41,18 +44,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             loading = ?, 
             transported = ?, 
             delivered_to_customer = ?, 
-            daysLeft = ?, 
-            deadline = ? 
+            leadTime = ?, 
+            deadline = ?, 
+            daysLeft = ? 
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssiss", 
+        "ssssssds", 
         $pre_loading, 
         $loading, 
         $transported, 
         $delivered_to_customer, 
-        $daysLeft, 
+        $leadTime, 
         $deadline, 
+        $daysLeft, 
         $poNumber
     );
 
@@ -80,8 +85,9 @@ $conn->close();
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Shipping Table</b></h2>
+        <hr>
 
         <div class="table-div" style="overflow-x:auto;">
             <table class="table table-bordered table-striped">
@@ -112,11 +118,11 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                               <td style="text-align: center;">
-                                <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px;  width: 20px;">
-                                </button>
-                            </td>
+                                <td style="text-align: center;">
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                        <img src="../assets/edit2.png" alt="Edit" style="height: 20px; width: 20px;">
+                                    </button>
+                                </td>
                             </tr>
 
                             <!-- Modal for editing each row -->
@@ -166,7 +172,23 @@ $conn->close();
                                                         <option <?= $data['delivered_to_customer'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
-                                               
+                                                
+                                                <!-- Lead Time input field -->
+                                                <div class="form-group">
+                                                    <label>Lead Time (Days)</label>
+                                                    <input type="number" name="leadTime" value="<?= $data['leadTime']; ?>" class="form-control" required>
+                                                </div>
+
+                                                <!-- Display calculated Deadline and Days Left -->
+                                                <div class="form-group">
+                                                    <label>Deadline</label>
+                                                    <input type="text" value="<?= $data['deadline']; ?>" class="form-control" readonly>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Days Left</label>
+                                                    <input type="text" value="<?= $data['daysLeft']; ?>" class="form-control" readonly>
+                                                </div>
+
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -180,7 +202,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="9">No data found in the Shipping Table.</td>
+                            <td colspan="10">No data found in the Shipping Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

@@ -48,6 +48,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                         <th>Order Date</th>
                         <th>Ship Date</th>
                         <th>Days Left</th>
+                        <th>Lead Time</th>
                         <th>Overall Status</th>
                     </tr>
                 </thead>
@@ -60,6 +61,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                                 <td><?= htmlspecialchars($order['orderDate']); ?></td>
                                 <td><?= htmlspecialchars($order['shipDate']); ?></td>
                                 <td><?= htmlspecialchars($order['daysLeft']); ?> Days</td>
+                                 <td><?= htmlspecialchars($order['leadTime']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['overallStatus']); ?></td>
                             </tr>
                         <?php endforeach; ?>

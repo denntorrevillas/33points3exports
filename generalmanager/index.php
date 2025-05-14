@@ -27,7 +27,7 @@
         <div class="nav-div">
             <div class="navigations">
                 <br>
-                <h4><b>Monitoring Department</b></h4>
+                <h4><b>General Manager</b></h4>
                <hr>
                <ul>       
                     <div class="nav-li">
@@ -65,6 +65,11 @@
                         <a href="?page=shipping">Track Order</a>
                     </div> 
 
+                    <hr>
+                   <div class="nav-li">
+                        <img src="../assets/usergreen (1).png" alt="">
+                        <a href="?page=track_order">Manage Users</a>
+                    </div>  
                 </ul>
             </div>
         </div>
@@ -73,16 +78,16 @@
         <div class="table-div">
             <div class="table-div-content">
                 <!-- Search Bar -->
-                <div class="search-container mb-4">
+                <!-- <div class="search-container mb-4">
                     <input type="text" id="searchInput" class="form-control" placeholder="Search Order">
-                </div>
+                </div> -->
 
                 <div class="content">
                     <?php
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'accounting', 'monitoring']; // Whitelist pages
+                        $allowed_pages = ['dashboard','marketing','shipping','production', 'accounting', 'monitoring']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

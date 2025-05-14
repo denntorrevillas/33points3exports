@@ -30,30 +30,41 @@
                 <h4><b>Accounting Department</b></h4>
                <hr>
                <ul>       
-                    <div class="nav-li">
+                     <div class="nav-li">
                         <img src="../assets/dashboard.png" alt="">
                         <a href="?page=dashboard">Dashboard</a>
                     </div>
 
                     <div class="nav-li">
-                        <img src="../assets/accounting.png" alt="">
-                        <a href="?page=accounting">Accounting</a>
+                        <img src="../assets/marketing.png" alt="">
+                        <a href="?page=marketing">Marketing Department</a>
                     </div>
 
                     <div class="nav-li">
-                        <img src="../assets/marketing.png" alt="">
-                        <a href="?page=marketing">Marketing Department</a>
+                        <img src="../assets/accounting.png" alt="">
+                        <a href="?page=accounting">Accounting Department</a>
                     </div> 
 
                     <div class="nav-li">
-                        <img src="../assets/history.png" alt="">
-                        <a href="?page=marketing_history">Marketing History</a>
+                        <img src="../assets/monitoring.png" alt="">
+                        <a href="?page=monitoring">Monitoring Department</a>
                     </div>   
                     
                     <div class="nav-li">
-                        <img src="../assets/track.png" alt="">
-                        <a href="?page=track_order">Track Order</a>
+                        <img src="../assets/production.png" alt="">
+                        <a href="?page=production">Production Department</a>
                     </div>  
+
+                    <div class="nav-li">
+                        <img src="../assets/shipping.png" alt="">
+                        <a href="?page=shipping">Shippping Department</a>
+                    </div>  
+
+                    <div class="nav-li">
+                        <img src="../assets/track.png" alt="">
+                        <a href="?page=shipping">Track Order</a>
+                    </div> 
+
                 </ul>
             </div>
         </div>

@@ -48,6 +48,7 @@ $conn->close();
 </head>
 <body>
     <h2><b>Accounting Department</b></h2>
+    <hr>
 
     <div class="table-div" style="overflow-x:auto;">
         <table class="table">

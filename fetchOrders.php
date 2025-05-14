@@ -3,7 +3,7 @@
 include 'db.php';
 
 // Fetch data from the database
-$query = "SELECT poNumber, buyer, orderDate, shipDate, DATEDIFF(shipDate, CURDATE()) AS daysLeft, overallStatus FROM Orders";
+$query = "SELECT poNumber, buyer, orderDate, shipDate, DATEDIFF(shipDate, CURDATE()) AS daysLeft, overallStatus,leadTime FROM Orders";
 $result = $conn->query($query);
 
 // Initialize an empty array to store rows

@@ -92,7 +92,7 @@ $conn->close();
                         <th>Deadline</th>
                         <th>Days Left</th>
                         <th>Lead Time</th>
-                        <th>Action</th>
+                        <th >Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,9 +108,9 @@ $conn->close();
                                 
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
-                                <td>
+                                <td style="text-align:center";>
                                 <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px;  width: 20px;">
+                                    <img src="../assets/edit2.png" alt="Edit">
                                 </button>
                             </td>
                             </tr>
@@ -154,15 +154,7 @@ $conn->close();
                             <option <?= $data['inspected'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Days Left</label>
-                        <input type="number" name="daysLeft" class="form-control" id="daysLeft<?= $data['poNumber']; ?>" value="<?= $data['daysLeft']; ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Deadline</label>
-                        <input type="text" class="form-control" id="deadline<?= $data['poNumber']; ?>" value="<?= htmlspecialchars($data['deadline']); ?>" readonly>
-                    </div>
+                  
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

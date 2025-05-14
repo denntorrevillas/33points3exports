@@ -20,6 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $supplierPOCreated = $_POST['supplierPOCreated'];
     $gmApproved = $_POST['gmApproved'];
     $supplierPOIssued = $_POST['supplierPOIssued'];
+    $leadTime = $_POST['leadTime'];  // Lead time input
+    $dateReceived = $_POST['dateReceived'];  // Date received input
+
+    // Calculate deadline (dateReceived + leadTime)
+    $deadline = date('Y-m-d', strtotime($dateReceived . " + $leadTime days"));
+
+    // Calculate days left (current date - deadline)
+    $currentDate = date('Y-m-d');
+    $daysLeft = (strtotime($deadline) - strtotime($currentDate)) / 86400; // 86400 seconds in a day
 
     // Update query
     $updateQuery = "
@@ -27,15 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
         SET supplierEvaluated = ?, 
             supplierPOCreated = ?, 
             gmApproved = ?, 
-            supplierPOIssued = ?
+            supplierPOIssued = ?, 
+            leadTime = ?, 
+            deadline = ?, 
+            daysLeft = ?
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "sssss", 
+        "ssssssds", 
         $supplierEvaluated, 
         $supplierPOCreated, 
         $gmApproved, 
         $supplierPOIssued, 
+        $leadTime, 
+        $deadline, 
+        $daysLeft, 
         $poNumber
     );
 
@@ -63,7 +78,7 @@ $conn->close();
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Monitoring</b></h2>
 
         <div class="table-div" >
@@ -95,11 +110,10 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                  <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                                
-                                <td >
-                                    <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit">
-                                </button>
+                                 <td style="text-align:center";>
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                        <img src="../assets/edit2.png" alt="Edit">
+                                    </button>
                                 </td>
                             </tr>
 
@@ -149,6 +163,14 @@ $conn->close();
                                                         <option value="In Progress" <?= $data['supplierPOIssued'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Completed" <?= $data['supplierPOIssued'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Lead Time (in days)</label>
+                                                    <input type="number" name="leadTime" class="form-control" value="<?= $data['leadTime']; ?>" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Date Received</label>
+                                                    <input type="date" name="dateReceived" class="form-control" value="<?= $data['dateReceived']; ?>" required>
                                                 </div>
                                             </div>
                                             <div class="modal-footer">

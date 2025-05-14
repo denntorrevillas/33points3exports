@@ -43,23 +43,39 @@
 
                     <div class="nav-li">
                         <img src="assets/add.png" alt="">
-                        <a href="?page=add_order">Add Order</a>
+                        <a href="?page=add_order">Add Order Department</a>
                     </div>
 
                     <div class="nav-li">
                         <img src="assets/marketing.png" alt="">
-                        <a href="?page=marketing">Marketing</a>
+                        <a href="?page=marketing">Marketing Department</a>
+                    </div>
+
+                    <div class="nav-li">
+                        <img src="assets/accounting.png" alt="">
+                        <a href="?page=accounting">Accounting Department</a>
                     </div> 
 
                     <div class="nav-li">
-                        <img src="assets/history.png" alt="">
-                        <a href="?page=marketing_history">History</a>
+                        <img src="assets/monitoring.png" alt="">
+                        <a href="?page=monitoring">Monitoring Department</a>
                     </div>   
                     
                     <div class="nav-li">
-                        <img src="assets/track.png" alt="">
-                        <a href="?page=track_order">Track Order</a>
+                        <img src="assets/production.png" alt="">
+                        <a href="?page=production">Production Department</a>
                     </div>  
+
+                    <div class="nav-li">
+                        <img src="assets/shipping.png" alt="">
+                        <a href="?page=shipping">Shippping Department</a>
+                    </div>  
+
+                    <div class="nav-li">
+                        <img src="assets/track.png" alt="">
+                        <a href="?page=tracking">Track Order</a>
+                    </div> 
+
                 </ul>
             </div>
         </div>
@@ -77,7 +93,7 @@
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'add_order', 'marketing_history', 'track_order', 'marketing']; // Whitelist pages
+                        $allowed_pages = ['dashboard', 'add_order', 'marketing_history', 'track_order', 'marketing','tracking']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";
