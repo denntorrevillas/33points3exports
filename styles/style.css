@@ -32,6 +32,7 @@ body{
 .logo-img img{
    width: 140px;
 }
+
 .nav-div{
     position: sticky;
     top: 0;
@@ -39,9 +40,13 @@ body{
     background-color:#ffffff ;
     width: 20%;
     /* height:max-content; */
-    height: 100vh;
+    height: 90vh;
     color: #1d503a;
-     padding: 0px 16px;
+     padding: 0px 16px 24px 16px;
+     
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 .navigations ul{
@@ -72,6 +77,9 @@ body{
     padding: 16px 4px;
     border-radius: 8px;
    
+}
+.nav-div img{
+    width: 24px;
 }
 .nav-li:hover{
     background: #f1f1f1;
@@ -175,6 +183,7 @@ tr:nth-child(even) {
     .user-logout {
       display: flex;
       align-items: center;
+      gap: 4px;
       
     }
     
@@ -190,4 +199,14 @@ tr:nth-child(even) {
     .track{
         display: flex;
         justify-content: center;
+    }
+    .log-out{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        color: #1d503a;
+    }
+    .log-out a{
+        color: #004226;
     }

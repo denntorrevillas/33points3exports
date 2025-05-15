@@ -23,12 +23,11 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                 Add Order
             </button>
             <div class="search w-20">
-                <input class="form-control" type="text" placeholder="Search Order">
-                  <button type="button" class="btn btn-success">
-                      SEARCH
-                    </button>
+                <input id="searchInput" class="form-control" type="text" placeholder="Search Order">
+                <button type="button" id="searchButton" class="btn btn-success">
+                    SEARCH
+                </button>
             </div>
-            
         </div>
 
         <!-- Success Message -->
@@ -40,7 +39,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
         <?php endif; ?>
 
         <div class="table-responsive">
-            <table >
+            <table id="ordersTable">
                 <thead>
                     <tr>
                         <th>PO No.</th>
@@ -61,13 +60,13 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                                 <td><?= htmlspecialchars($order['orderDate']); ?></td>
                                 <td><?= htmlspecialchars($order['shipDate']); ?></td>
                                 <td><?= htmlspecialchars($order['daysLeft']); ?> Days</td>
-                                 <td><?= htmlspecialchars($order['leadTime']); ?> Days</td>
+                                <td><?= htmlspecialchars($order['leadTime']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['overallStatus']); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="6" class="text-center">No orders found.</td>
+                            <td colspan="7" class="text-center">No orders found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -99,9 +98,6 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                             <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required>
                         </div>
 
-                        
-                        
-                       
                         <div class="mb-3">
                             <label for="deliveryDate" class="form-label">Ship Date</label>
                             <input type="date" name="deliveryDate" class="form-control" id="deliveryDate" readonly>
@@ -137,31 +133,22 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
             // Call the function initially to color the cells
             updateDaysLeftColor();
 
-            // Event listener for the Delivery Days input
-            document.getElementById('deliveryDaysInput').addEventListener('input', function () {
-                const daysToAdd = parseInt(this.value);
-                if (!isNaN(daysToAdd)) {
-                    const currentDate = new Date();
-                    const deliveryDate = new Date(currentDate.setDate(currentDate.getDate() + daysToAdd));
-                    const formattedDate = deliveryDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
-                    document.getElementById('deliveryDate').value = formattedDate;
-                } else {
-                    document.getElementById('deliveryDate').value = ''; // Clear the date if input is invalid
-                }
-            });
-
             // Search functionality
-            document.querySelector('.search input').addEventListener('input', function () {
-                const searchValue = this.value.toLowerCase();
-                const rows = document.querySelectorAll('table tbody tr');
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const rows = document.querySelectorAll('table tbody tr');
+
+            function filterTable() {
+                const searchValue = searchInput.value.toLowerCase();
                 rows.forEach(row => {
                     const rowText = row.textContent.toLowerCase();
                     row.style.display = rowText.includes(searchValue) ? '' : 'none';
                 });
-            });
+            }
+
+            searchInput.addEventListener('input', filterTable);
+            searchButton.addEventListener('click', filterTable);
         });
     </script>
-
-   
 </body>
 </html>
