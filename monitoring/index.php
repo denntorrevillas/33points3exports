@@ -1,3 +1,33 @@
+
+<?php
+// Start session
+session_start();
+
+// Check if the user is logged in
+if (!isset($_SESSION['staff_id'])) {
+    header('Location: index.php'); // Redirect to login if not logged in
+    exit;
+}
+
+// Include database connection
+include '../db.php';
+
+// Retrieve staff details from the database
+$staff_id = $_SESSION['staff_id'];
+$sql = "SELECT CONCAT(firstname, ' ', middlename, ' ', lastname) AS username FROM staff WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('i', $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $username = $row['username'];
+} else {
+    $username = "Unknown User"; // Fallback if user details are not found
+}
+$stmt->close();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +50,7 @@
                
                 <div class="user-logout">
                     <img src="../assets/user.png" alt="" srcset="">
-                    <p>User name</p>
+                    <p id="staffname"><?php echo htmlspecialchars($username); ?></p>
                    
                 </div>
             </div>

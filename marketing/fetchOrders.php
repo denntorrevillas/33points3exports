@@ -1,6 +1,6 @@
 <?php
 // Include database connection
-include 'db.php';
+include '../db.php';
 
 // Fetch data from the database
 $query = "SELECT poNumber, buyer, orderDate, shipDate, DATEDIFF(shipDate, CURDATE()) AS daysLeft, overallStatus,leadTime FROM Orders";

@@ -1,6 +1,6 @@
 <?php
 // Include the database connection
-include 'db.php'; // Assuming the database connection is in db.php
+include '../db.php'; // Assuming the database connection is in db.php
 
 // Query to fetch data from the marketing table
 $query = "SELECT * FROM marketing";
@@ -57,6 +57,7 @@ $conn->close();
 </head>
 <body>
     <h2><b>Marketing Department</b></h2>
+    <hr>
 
     <div class="table-div" style="overflow-x:auto;">
         <table class="table">
@@ -87,7 +88,7 @@ $conn->close();
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
                                 <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="assets/edit2.png" alt="Edit">
+                                    <img src="../assets/edit2.png" alt="Edit">
                                 </button>
                             </td>
                         </tr>

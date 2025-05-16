@@ -1,6 +1,6 @@
 <?php
 // Database connection (adjust with your own credentials)
-include 'db.php';
+include '../db.php';
 
 // Check connection
 if ($conn->connect_error) {
@@ -49,7 +49,8 @@ $conn->close();
     </style>
 </head>
 <body>
-    <h2>Multiple Chart Examples</h2>
+    <h2><b>Dashboard</b></h2>
+    <hr>
 
     <div class="chart-container">
         <!-- Pie Chart -->

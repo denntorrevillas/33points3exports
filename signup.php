@@ -1,8 +1,9 @@
 <?php
+// Initialize $alertScript
+$alertScript = '';
+
 // Database connection
 include 'db.php';
-// Create connection
-// $conn = new mysqli($host, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
@@ -25,15 +26,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             VALUES ('$firstname', '$middlename', '$lastname', '$phone', '$email', '$department', '$position', '$password', 'Active', NOW())";
 
     if ($conn->query($sql) === TRUE) {
-        echo "Sign-up successful!";
+        // SweetAlert2 success script
+        $alertScript = "
+        <script>
+            Swal.fire({
+                title: 'Success!',
+                text: 'Sign-up successful!',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'index.php'; // Redirect on confirmation
+                }
+            });
+        </script>";
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        // SweetAlert2 error script
+        $alertScript = "
+        <script>
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to sign up. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        </script>";
     }
 
     $conn->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>33 Point 3 Exports Inc.</title>
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
     <link rel="stylesheet" href="./style.css?v=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="user-input">
@@ -108,5 +131,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
     </div>
+
+    <?php
+    // Output the SweetAlert2 script if set
+    echo $alertScript;
+    ?>
 </body>
 </html>
