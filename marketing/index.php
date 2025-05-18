@@ -70,7 +70,7 @@ $stmt->close();
 
                     <div class="nav-li">
                         <img src="../assets/add.png" alt="">
-                        <a href="?page=add_order">Add Order Department</a>
+                        <a href="?page=add_order">Add Order</a>
                     </div>
 
                     <div class="nav-li">

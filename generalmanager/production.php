@@ -16,57 +16,42 @@ if ($result->num_rows > 0) {
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $finishing = $_POST['finishing'];
-    $packed = $_POST['packed'];
-    $inspected = $_POST['inspected'];
-    $leadTime = $_POST['leadTime']; // Get Lead Time input
+    $newLeadTime = intval($_POST['leadTime']); // Get updated lead time
 
-    // Fetch the dateReceived for the specified PO Number
-    $dateReceivedQuery = "SELECT dateReceived FROM production WHERE poNumber = ?";
-    $stmt = $conn->prepare($dateReceivedQuery);
-    $stmt->bind_param("s", $poNumber);
-    $stmt->execute();
-    $stmt->bind_result($dateReceived);
-    $stmt->fetch();
-    $stmt->close();
+    // Fetch the current dateReceived and daysLeft for the specified PO Number
+    $query = "SELECT dateReceived, daysLeft FROM production WHERE poNumber = ?";
+    $stmt1 = $conn->prepare($query);
+    $stmt1->bind_param("s", $poNumber);
+    $stmt1->execute();
+    $stmt1->bind_result($dateReceived, $currentDaysLeft);
+    $stmt1->fetch();
+    $stmt1->close();
 
-    // Calculate the deadline based on the dateReceived and leadTime
-    $deadline = date('Y-m-d', strtotime("$dateReceived +$leadTime days"));
+    // Recalculate the deadline and daysLeft
+    $updatedDaysLeft = intval($currentDaysLeft) + $newLeadTime; // Add new lead time
+    $deadlineDate = new DateTime($dateReceived);
+    $deadlineDate->modify("+$updatedDaysLeft days");
+    $newDeadline = $deadlineDate->format('Y-m-d');
 
-    // Calculate the daysLeft (difference between the deadline and current date)
-    $daysLeft = (strtotime($deadline) - time()) / (60 * 60 * 24); // in days
-
-    // Update query
+    // Update the database
     $updateQuery = "
         UPDATE production 
-        SET finishing = ?, 
-            packed = ?, 
-            inspected = ?, 
+        SET leadTime = ?, 
             daysLeft = ?, 
-            deadline = ?, 
-            leadTime = ? 
+            deadline = ? 
         WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param(
-        "sssssss", 
-        $finishing, 
-        $packed, 
-        $inspected, 
-        $daysLeft, 
-        $deadline, 
-        $leadTime, 
-        $poNumber
-    );
+    $stmt2 = $conn->prepare($updateQuery);
+    $stmt2->bind_param("iiss", $newLeadTime, $updatedDaysLeft, $newDeadline, $poNumber);
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-        // Refresh the page to see changes
-        echo "<script>window.location.href = window.location.href;</script>";
+    if ($stmt2->execute()) {
+        echo "<script>alert('Lead Time, Days Left, and Deadline updated successfully!');</script>";
+        echo "<script>window.location.href = window.location.href;</script>"; // Prevent form resubmission
+        exit;
     } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
     }
 
-    $stmt->close();
+    $stmt2->close();
 }
 
 // Close the database connection
@@ -115,17 +100,17 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
                                 <td style="text-align:center;">
                                     <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                        <img src="../assets/edit2.png" alt="Edit">
+                                        <img src="../assets/edit2.png" alt="Edit" style="height:20px; width:20px;">
                                     </button>
                                 </td>
                             </tr>
 
-                            <!-- Modal for editing each row -->
+                            <!-- Modal for editing leadTime -->
                             <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Production Record</h5>
+                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Lead Time</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
@@ -134,46 +119,19 @@ $conn->close();
                                             <div class="modal-body">
                                                 <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
 
-                                                <!-- Fields for updating -->
+                                                <!-- Lead Time -->
                                                 <div class="form-group">
-                                                    <label>Finishing</label>
-                                                    <select name="finishing" class="form-control">
-                                                        <option <?= $data['finishing'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['finishing'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['finishing'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
+                                                    <label for="leadTime<?= $data['poNumber']; ?>">Lead Time (Days)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="leadTime"
+                                                        class="form-control"
+                                                        id="leadTime<?= $data['poNumber']; ?>"
+                                                        value="<?= $data['leadTime']; ?>"
+                                                        min="0"
+                                                        required
+                                                    />
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Packed</label>
-                                                    <select name="packed" class="form-control">
-                                                        <option <?= $data['packed'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['packed'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['packed'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Inspected</label>
-                                                    <select name="inspected" class="form-control">
-                                                        <option <?= $data['inspected'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['inspected'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['inspected'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Lead Time (Days)</label>
-                                                    <input type="number" name="leadTime" value="<?= $data['leadTime']; ?>" class="form-control" required>
-                                                </div>
-
-                                                <!-- Display calculated Deadline and Days Left -->
-                                                <div class="form-group">
-                                                    <label>Deadline</label>
-                                                    <input type="text" value="<?= $data['deadline']; ?>" class="form-control" readonly>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Days Left</label>
-                                                    <input type="text" value="<?= $data['daysLeft']; ?>" class="form-control" readonly>
-                                                </div>
-
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -183,7 +141,6 @@ $conn->close();
                                     </div>
                                 </div>
                             </div>
-
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>

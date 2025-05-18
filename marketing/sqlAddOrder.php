@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+include '../db.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (
@@ -13,23 +13,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $poNumber = $_POST['poNumber'];
     $buyer = $_POST['buyer'];
-    $leadTime = $_POST['leadTime'];
-    $orderDate = date('Y-m-d');
+    $leadTime = (int)$_POST['leadTime'];
 
-    // Calculate ship date from lead time
+    $orderDate = date('Y-m-d');
     $shipDate = date('Y-m-d', strtotime("+$leadTime days"));
+    $daysLeft = $leadTime;
     $overallStatus = "Not Started";
 
-    $sql = "INSERT INTO Orders (poNumber, buyer, orderDate, shipDate, overallStatus, leadTime) 
-            VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO Orders (poNumber, buyer, orderDate, shipDate, daysLeft, leadTime, overallStatus) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
 
     if ($stmt) {
-        $stmt->bind_param("ssssss", $poNumber, $buyer, $orderDate, $shipDate, $overallStatus, $leadTime);
+        $stmt->bind_param("ssssiss", $poNumber, $buyer, $orderDate, $shipDate, $daysLeft, $leadTime, $overallStatus);
 
         if ($stmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Order added successfully!"]);
+            // Redirect with success query string (optional)
+            header("Location: dashboard.php?success=1");
             exit;
         } else {
             echo json_encode(["success" => false, "message" => "Execution error: " . $stmt->error]);

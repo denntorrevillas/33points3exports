@@ -9,6 +9,23 @@ $result = $conn->query($query);
 // Check if there are any results
 if ($result->num_rows > 0) {
     $monitoringData = $result->fetch_all(MYSQLI_ASSOC);
+
+    // Calculate leadTime dynamically if missing
+    foreach ($monitoringData as &$data) {
+        if (is_null($data['leadTime']) && !is_null($data['dateReceived']) && !is_null($data['deadline'])) {
+            $dateReceived = new DateTime($data['dateReceived']);
+            $deadline = new DateTime($data['deadline']);
+            $leadTime = $deadline->diff($dateReceived)->days;
+            $data['leadTime'] = $leadTime;
+
+            // Update the database with the calculated leadTime
+            $updateLeadTimeQuery = "UPDATE monitoring SET leadTime = ? WHERE poNumber = ?";
+            $stmt = $conn->prepare($updateLeadTimeQuery);
+            $stmt->bind_param("is", $leadTime, $data['poNumber']);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
 } else {
     $monitoringData = [];
 }
@@ -16,38 +33,42 @@ if ($result->num_rows > 0) {
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $supplierEvaluated = $_POST['supplierEvaluated'];
-    $supplierPOCreated = $_POST['supplierPOCreated'];
-    $gmApproved = $_POST['gmApproved'];
-    $supplierPOIssued = $_POST['supplierPOIssued'];
+    $supplierEvaluated = $_POST['supplierEvaluated'] ?? null;
+    $supplierPOCreated = $_POST['supplierPOCreated'] ?? null;
+    $gmApproved = $_POST['gmApproved'] ?? null;
+    $supplierPOIssued = $_POST['supplierPOIssued'] ?? null;
 
-    // Update query
-    $updateQuery = "
-        UPDATE monitoring 
-        SET supplierEvaluated = ?, 
-            supplierPOCreated = ?, 
-            gmApproved = ?, 
-            supplierPOIssued = ?
-        WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param(
-        "sssss", 
-        $supplierEvaluated, 
-        $supplierPOCreated, 
-        $gmApproved, 
-        $supplierPOIssued, 
-        $poNumber
-    );
+    // Validate required fields
+    if ($supplierEvaluated && $supplierPOCreated && $gmApproved && $supplierPOIssued) {
+        // Update query
+        $updateQuery = "
+            UPDATE monitoring 
+            SET supplierEvaluated = ?, 
+                supplierPOCreated = ?, 
+                gmApproved = ?, 
+                supplierPOIssued = ?
+            WHERE poNumber = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param(
+            "sssss", 
+            $supplierEvaluated, 
+            $supplierPOCreated, 
+            $gmApproved, 
+            $supplierPOIssued, 
+            $poNumber
+        );
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-        // Refresh the page to see changes
-        echo "<script>window.location.href = window.location.href;</script>";
+        if ($stmt->execute()) {
+            echo "<script>alert('Record updated successfully!');</script>";
+            echo "<script>window.location.href = window.location.href;</script>";
+        } else {
+            echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        }
+
+        $stmt->close();
     } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        echo "<script>alert('All fields are required!');</script>";
     }
-
-    $stmt->close();
 }
 
 // Close the database connection
@@ -66,8 +87,8 @@ $conn->close();
     <div class="container mt-4">
         <h2><b>Monitoring</b></h2>
 
-        <div class="table-div" >
-            <table class="table table-bordered table-striped" >
+        <div class="table-div">
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>PO No.</th>
@@ -94,12 +115,11 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['dateReceived']); ?></td>
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
-                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                                
-                                <td >
-                                    <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit">
-                                </button>
+                                <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                                <td>
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                        <img src="../assets/edit2.png" alt="Edit">
+                                    </button>
                                 </td>
                             </tr>
 
@@ -162,7 +182,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="9">No data found in the Monitoring Table.</td>
+                            <td colspan="10">No data found in the Monitoring Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

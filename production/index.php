@@ -61,7 +61,7 @@ $stmt->close();
         <div class="nav-div">
             <div class="navigations">
                 <br>
-                <h4><b>Monitoring Department</b></h4>
+                <h4><b>Production Department</b></h4>
                <hr>
                <ul>       
                      <div class="nav-li">

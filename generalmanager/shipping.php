@@ -16,54 +16,39 @@ if ($result->num_rows > 0) {
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $pre_loading = $_POST['pre_loading'];
-    $loading = $_POST['loading'];
-    $transported = $_POST['transported'];
-    $delivered_to_customer = $_POST['delivered_to_customer'];
-    $leadTime = $_POST['leadTime'];  // Get Lead Time input
+    $leadTime = (int)$_POST['leadTime'];  // Lead Time input
 
-    // Fetch the dateReceived for the specified PO Number
-    $dateReceivedQuery = "SELECT dateReceived FROM shipping WHERE poNumber = ?";
-    $stmt = $conn->prepare($dateReceivedQuery);
+    // Fetch the current daysLeft from the database
+    $daysLeftQuery = "SELECT daysLeft FROM shipping WHERE poNumber = ?";
+    $stmt = $conn->prepare($daysLeftQuery);
     $stmt->bind_param("s", $poNumber);
     $stmt->execute();
-    $stmt->bind_result($dateReceived);
+    $stmt->bind_result($currentDaysLeft);
     $stmt->fetch();
     $stmt->close();
 
-    // Calculate the deadline based on the leadTime value
-    $deadline = date('Y-m-d', strtotime("$dateReceived +$leadTime days"));
+    // Add leadTime to the current daysLeft
+    $newDaysLeft = $currentDaysLeft + $leadTime;
 
-    // Calculate the daysLeft (difference between the deadline and current date)
-    $daysLeft = (strtotime($deadline) - time()) / (60 * 60 * 24); // in days
+    // Calculate the new deadline from current date + newDaysLeft
+    $deadline = date('Y-m-d', strtotime("+$newDaysLeft days"));
 
-    // Update query
+    // Update query — update only daysLeft and deadline
     $updateQuery = "
         UPDATE shipping 
-        SET pre_loading = ?, 
-            loading = ?, 
-            transported = ?, 
-            delivered_to_customer = ?, 
-            leadTime = ?, 
-            deadline = ?, 
-            daysLeft = ? 
+        SET daysLeft = ?, 
+            deadline = ? 
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssssds", 
-        $pre_loading, 
-        $loading, 
-        $transported, 
-        $delivered_to_customer, 
-        $leadTime, 
-        $deadline, 
-        $daysLeft, 
+        "dss",
+        $newDaysLeft,
+        $deadline,
         $poNumber
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-        // Refresh the page to see changes
+        echo "<script>alert('Lead Time added to Days Left successfully!');</script>";
         echo "<script>window.location.href = window.location.href;</script>";
     } else {
         echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
@@ -72,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $stmt->close();
 }
 
+
 // Close the database connection
 $conn->close();
 ?>
@@ -79,15 +65,15 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Shipping Table</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
 </head>
 <body>
     <div class="container">
         <h2><b>Shipping Table</b></h2>
-        <hr>
+        <hr />
 
         <div class="table-div" style="overflow-x:auto;">
             <table class="table table-bordered table-striped">
@@ -120,75 +106,40 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
                                 <td style="text-align: center;">
                                     <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                        <img src="../assets/edit2.png" alt="Edit" style="height: 20px; width: 20px;">
+                                        <img src="../assets/edit2.png" alt="Edit" style="height: 20px; width: 20px;" />
                                     </button>
                                 </td>
                             </tr>
 
-                            <!-- Modal for editing each row -->
+                            <!-- Modal for editing Lead Time only -->
                             <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Shipping Record</h5>
+                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Lead Time</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
 
-                                                <!-- Fields for updating -->
-                                                <div class="form-group">
-                                                    <label>Pre-loading</label>
-                                                    <select name="pre_loading" class="form-control">
-                                                        <option <?= $data['pre_loading'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['pre_loading'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['pre_loading'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Loading</label>
-                                                    <select name="loading" class="form-control">
-                                                        <option <?= $data['loading'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['loading'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['loading'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Transported</label>
-                                                    <select name="transported" class="form-control">
-                                                        <option <?= $data['transported'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['transported'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['transported'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Delivered to Customer</label>
-                                                    <select name="delivered_to_customer" class="form-control">
-                                                        <option <?= $data['delivered_to_customer'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option <?= $data['delivered_to_customer'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option <?= $data['delivered_to_customer'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                    </select>
-                                                </div>
-                                                
-                                                <!-- Lead Time input field -->
+                                                <!-- Lead Time input field only -->
                                                 <div class="form-group">
                                                     <label>Lead Time (Days)</label>
-                                                    <input type="number" name="leadTime" value="<?= $data['leadTime']; ?>" class="form-control" required>
+                                                    <input type="number" name="leadTime" value="<?= $data['leadTime']; ?>" class="form-control" min="0" required />
                                                 </div>
 
-                                                <!-- Display calculated Deadline and Days Left -->
+                                                <!-- Display calculated Deadline and Days Left as readonly -->
                                                 <div class="form-group">
                                                     <label>Deadline</label>
-                                                    <input type="text" value="<?= $data['deadline']; ?>" class="form-control" readonly>
+                                                    <input type="text" value="<?= $data['deadline']; ?>" class="form-control" readonly />
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Days Left</label>
-                                                    <input type="text" value="<?= $data['daysLeft']; ?>" class="form-control" readonly>
+                                                    <input type="text" value="<?= round($data['daysLeft'], 2); ?>" class="form-control" readonly />
                                                 </div>
-
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

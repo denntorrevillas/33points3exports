@@ -8,30 +8,23 @@ $result = $conn->query($query);
 
 // Check if there are any results
 if ($result->num_rows > 0) {
-    // Fetch the data as an associative array
     $marketingData = $result->fetch_all(MYSQLI_ASSOC);
 } else {
     $marketingData = [];
 }
 
 // Handle the update
-// Handle the update
-// Handle the update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
     $receivedOrder = $_POST['receivedOrder'];
     $businessAward = $_POST['businessAward'];
     $endorsedToGM = $_POST['endorsedToGM'];
-    $daysLeft = $_POST['daysLeft'];
     $leadTime = isset($_POST['leadTime']) ? $_POST['leadTime'] : NULL; // Allow blank (NULL) value for leadTime
 
-    // Calculate the new deadline
-    $deadline = date('Y-m-d', strtotime("+$daysLeft days"));
-
-    // Update query (now allowing leadTime to be NULL if not provided)
-    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, daysLeft = ?, deadline = ?, leadTime = ? WHERE poNumber = ?";
+    // Update query
+    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sssssss", $receivedOrder, $businessAward, $endorsedToGM, $daysLeft, $deadline, $leadTime, $poNumber);
+    $stmt->bind_param("sssss", $receivedOrder, $businessAward, $endorsedToGM, $leadTime, $poNumber);
 
     if ($stmt->execute()) {
         echo "<script>alert('Record updated successfully!');</script>";
@@ -42,8 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $stmt->close();
 }
 
-
-// Close the connection
 $conn->close();
 ?>
 
@@ -69,7 +60,7 @@ $conn->close();
                     <th>Endorsed to GM</th>
                     <th>Order Received</th>
                     <th>Deadline</th>
-                    <th>Days Left</th>
+                     <th>Days Left</th>
                     <th>Lead Time</th>
                     <th>Action</th>
                 </tr>
@@ -87,7 +78,7 @@ $conn->close();
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
-                                <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
                                     <img src="../assets/edit2.png" alt="Edit">
                                 </button>
                             </td>
@@ -107,7 +98,6 @@ $conn->close();
                                         <div class="modal-body">
                                             <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
 
-                                            <!-- Received Order Dropdown -->
                                             <div class="form-group">
                                                 <label for="receivedOrder">Received Order</label>
                                                 <select class="form-control" name="receivedOrder" id="receivedOrder" required>
@@ -117,7 +107,6 @@ $conn->close();
                                                 </select>
                                             </div>
 
-                                            <!-- Business Award Dropdown -->
                                             <div class="form-group">
                                                 <label for="businessAward">Business Award</label>
                                                 <select class="form-control" name="businessAward" id="businessAward" required>
@@ -127,7 +116,6 @@ $conn->close();
                                                 </select>
                                             </div>
 
-                                            <!-- Endorsed to GM Dropdown -->
                                             <div class="form-group">
                                                 <label for="endorsedToGM">Endorsed to GM</label>
                                                 <select class="form-control" name="endorsedToGM" id="endorsedToGM" required>
@@ -135,12 +123,6 @@ $conn->close();
                                                     <option value="In Progress" <?= $data['endorsedToGM'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                     <option value="Completed" <?= $data['endorsedToGM'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                 </select>
-                                            </div>
-
-                                            <!-- Days Left Input -->
-                                            <div class="form-group">
-                                                <label for="daysLeft">Days Left</label>
-                                                <input type="number" class="form-control" name="daysLeft" value="<?= $data['daysLeft']; ?>" required>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -161,36 +143,47 @@ $conn->close();
         </table>
     </div>
 
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Iterate through each modal and attach event listeners
-            document.querySelectorAll('.modal').forEach(modal => {
-                const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
-                const businessAwardSelect = modal.querySelector('[name="businessAward"]');
-                const endorsedToGMSelect = modal.querySelector('[name="endorsedToGM"]');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Iterate through each modal
+        document.querySelectorAll('.modal').forEach(modal => {
+            const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
+            const businessAwardSelect = modal.querySelector('[name="businessAward"]');
+            const endorsedToGMSelect = modal.querySelector('[name="endorsedToGM"]');
 
-                // Function to toggle the disabled state
-                const toggleDisableState = () => {
-                    const isReceivedOrderCompleted = receivedOrderSelect.value === 'Completed';
-                    const isBusinessAwardCompleted = businessAwardSelect.value === 'Completed';
+            // Function to toggle the disabled state of dropdowns
+            const toggleDisableState = () => {
+                const isReceivedOrderCompleted = receivedOrderSelect.value === 'Completed';
+                const isBusinessAwardCompleted = businessAwardSelect.value === 'Completed';
 
-                    // Enable or disable the next dropdown based on the current state
-                    businessAwardSelect.disabled = !isReceivedOrderCompleted;
-                    endorsedToGMSelect.disabled = !isBusinessAwardCompleted;
-                };
+                // Enable/disable based on the state of the previous dropdown
+                businessAwardSelect.disabled = !isReceivedOrderCompleted;
+                endorsedToGMSelect.disabled = !isBusinessAwardCompleted;
 
-                // Initial state check
-                toggleDisableState();
+                // Reset values if disabled
+                if (!isReceivedOrderCompleted) {
+                    businessAwardSelect.value = 'Not Started';
+                }
+                if (!isBusinessAwardCompleted) {
+                    endorsedToGMSelect.value = 'Not Started';
+                }
+            };
 
-                // Add event listeners for changes on dropdowns
-                receivedOrderSelect.addEventListener('change', toggleDisableState);
-                businessAwardSelect.addEventListener('change', toggleDisableState);
-            });
+            // Initial state check on modal load
+            toggleDisableState();
+
+            // Add event listeners to monitor changes
+            receivedOrderSelect.addEventListener('change', toggleDisableState);
+            businessAwardSelect.addEventListener('change', toggleDisableState);
         });
-    </script>
+    });
+</script>
+
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</
+</body>
+</html>

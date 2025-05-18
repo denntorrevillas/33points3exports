@@ -9,8 +9,8 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
 </head>
 <body>
@@ -23,7 +23,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                 Add Order
             </button>
             <div class="search w-20">
-                <input id="searchInput" class="form-control" type="text" placeholder="Search Order">
+                <input id="searchInput" class="form-control" type="text" placeholder="Search Order" />
                 <button type="button" id="searchButton" class="btn btn-success">
                     SEARCH
                 </button>
@@ -87,20 +87,15 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                     <form id="addOrderForm" action="sqlAddOrder.php" method="POST">
                         <div class="mb-3">
                             <label for="poNumber" class="form-label">PO No.</label>
-                            <input type="text" name="poNumber" class="form-control" id="poNumber" placeholder="Enter PO Number" required>
+                            <input type="text" name="poNumber" class="form-control" id="poNumber" placeholder="Enter PO Number" required />
                         </div>
                         <div class="mb-3">
                             <label for="buyer" class="form-label">Buyer</label>
-                            <input type="text" name="buyer" class="form-control" id="buyer" placeholder="Enter Buyer Name" required>
+                            <input type="text" name="buyer" class="form-control" id="buyer" placeholder="Enter Buyer Name" required />
                         </div>
                         <div class="mb-3">
-                            <label for="leadTime" class="form-label"> Lead Time</label>
-                            <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="deliveryDate" class="form-label">Ship Date</label>
-                            <input type="date" name="deliveryDate" class="form-control" id="deliveryDate" readonly>
+                            <label for="leadTime" class="form-label">Lead Time</label>
+                            <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required />
                         </div>
                     </form>
                 </div>

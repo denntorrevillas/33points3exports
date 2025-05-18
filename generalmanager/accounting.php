@@ -17,21 +17,39 @@ if ($result) {
 // Handle the update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $receivedCopy = $_POST['receivedCopy'];
-    $paymentReceived = $_POST['paymentReceived'];
+    $newLeadTime = intval($_POST['leadTime']);
 
-    // Update query
-    $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
+    // Get current daysLeft and deadline for this poNumber
+    $daysDeadlineQuery = "SELECT daysLeft, deadline FROM accounting WHERE poNumber = ?";
+    $stmt1 = $conn->prepare($daysDeadlineQuery);
+    $stmt1->bind_param("s", $poNumber);
+    $stmt1->execute();
+    $stmt1->bind_result($currentDaysLeft, $currentDeadline);
+    $stmt1->fetch();
+    $stmt1->close();
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
+    // Update daysLeft by adding the new leadTime input
+    $updatedDaysLeft = intval($currentDaysLeft) + $newLeadTime;
+
+    // Calculate new deadline by adding updatedDaysLeft days to current date (or current deadline)
+    $deadlineDate = new DateTime($currentDeadline);
+    $deadlineDate->modify("+$updatedDaysLeft days");
+    $newDeadline = $deadlineDate->format('Y-m-d');
+
+    // Update query with new leadTime (input only), updated daysLeft, and new deadline
+    $updateQuery = "UPDATE accounting SET leadTime = ?, daysLeft = ?, deadline = ? WHERE poNumber = ?";
+    $stmt2 = $conn->prepare($updateQuery);
+    $stmt2->bind_param("iiss", $newLeadTime, $updatedDaysLeft, $newDeadline, $poNumber);
+
+    if ($stmt2->execute()) {
+        echo "<script>alert('Lead Time, Days Left, and Deadline updated successfully!');</script>";
+        echo "<script>window.location.href='';</script>"; // prevent form resubmission
+        exit;
     } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
     }
 
-    $stmt->close();
+    $stmt2->close();
 }
 
 // Close the connection
@@ -41,14 +59,14 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Accounting Department</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
 </head>
 <body>
     <h2><b>Accounting Department</b></h2>
-    <hr>
+    <hr />
 
     <div class="table-div" style="overflow-x:auto;">
         <table class="table">
@@ -62,7 +80,6 @@ $conn->close();
                     <th>Days Left</th>
                     <th>Lead Time</th>
                     <th>Action</th>
-                    
                 </tr>
             </thead>
             <tbody>
@@ -75,46 +92,31 @@ $conn->close();
                             <td><?= htmlspecialchars($data['dateReceived']); ?></td>
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
-                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                            <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
-                                <buttom data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px;  width: 20px;">
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px; width: 20px;" />
                                 </button>
                             </td>
                         </tr>
 
-                        <!-- Modal for editing each row -->
+                        <!-- Modal for editing leadTime only -->
                         <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Accounting Record</h5>
+                                        <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Lead Time for PO <?= htmlspecialchars($data['poNumber']); ?></h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                     <form method="POST" action="">
                                         <div class="modal-body">
-                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
 
-                                            <!-- Received Copy Dropdown -->
                                             <div class="form-group">
-                                                <label for="receivedCopy">Received Copy</label>
-                                                <select class="form-control" name="receivedCopy" id="receivedCopy<?= $data['poNumber']; ?>" required>
-                                                    <option value="Not Started" <?= $data['receivedCopy'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                    <option value="In Progress" <?= $data['receivedCopy'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                    <option value="Completed" <?= $data['receivedCopy'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                </select>
-                                            </div>
-
-                                            <!-- Payment Received Dropdown -->
-                                            <div class="form-group">
-                                                <label for="paymentReceived">Payment Received</label>
-                                                <select class="form-control" name="paymentReceived" id="paymentReceived<?= $data['poNumber']; ?>" required <?= $data['receivedCopy'] != 'Completed' ? 'disabled' : ''; ?>>
-                                                    <option value="Not Started" <?= $data['paymentReceived'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                    <option value="In Progress" <?= $data['paymentReceived'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                    <option value="Completed" <?= $data['paymentReceived'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                                </select>
+                                                <label for="leadTime<?= $data['poNumber']; ?>">Add Lead Time (Days)</label>
+                                                <input type="number" min="0" class="form-control" name="leadTime" id="leadTime<?= $data['poNumber']; ?>" required placeholder="Enter days to add" />
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -125,10 +127,11 @@ $conn->close();
                                 </div>
                             </div>
                         </div>
+
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="5">No data found in the Accounting Department.</td>
+                        <td colspan="8">No data found in the Accounting Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -139,21 +142,5 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.modal').forEach(modal => {
-                const receivedCopyDropdown = modal.querySelector('[name="receivedCopy"]');
-                const paymentReceivedDropdown = modal.querySelector('[name="paymentReceived"]');
-
-                receivedCopyDropdown.addEventListener('change', () => {
-                    paymentReceivedDropdown.disabled = receivedCopyDropdown.value !== 'Completed';
-                    if (paymentReceivedDropdown.disabled) {
-                        paymentReceivedDropdown.value = '';
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
