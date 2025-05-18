@@ -16,12 +16,12 @@ $sqlStatusCounts = "
         SUM(inspected = 'Not Started') AS inspectedNotStarted,
         SUM(inspected = 'In Progress') AS inspectedInProgress,
         SUM(inspected = 'Completed') AS inspectedCompleted
-    FROM your_table_name";  // <-- replace your_table_name with actual table name
+    FROM production";  // <-- replace production with actual table name
 $statusResult = $conn->query($sqlStatusCounts);
 $statusCounts = $statusResult->fetch_assoc();
 
 // Fetch daysLeft and leadTime per poNumber
-$sqlTime = "SELECT poNumber, daysLeft, leadTime FROM your_table_name ORDER BY poNumber";  // replace table name
+$sqlTime = "SELECT poNumber, daysLeft, leadTime FROM production ORDER BY poNumber";  // replace table name
 $timeResult = $conn->query($sqlTime);
 
 $poNumbers = [];
@@ -50,11 +50,7 @@ $conn->close();
         margin: 0; padding: 0;
         background-color: #f9f9f9;
     }
-    h2 {
-        text-align: center;
-        margin: 20px 0;
-        color: #222;
-    }
+ 
     .chart-container {
         display: flex;
         flex-wrap: wrap;
@@ -77,7 +73,8 @@ $conn->close();
 </style>
 </head>
 <body>
-    <h2>Production Dashboard</h2>
+    <h2><b>Production Dashboard</b></h2>
+    <hr>
     <div class="chart-container">
 
         <!-- Stacked Bar Chart for statuses -->
