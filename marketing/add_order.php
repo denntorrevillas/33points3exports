@@ -12,6 +12,8 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
     <div class="container">
@@ -107,6 +109,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
         </div>
     </div>
 
+   
     <!-- JavaScript -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {

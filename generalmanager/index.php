@@ -119,10 +119,7 @@ $stmt->close();
         <!-- Content Area -->
         <div class="table-div">
             <div class="table-div-content">
-                <!-- Search Bar -->
-                <!-- <div class="search-container mb-4">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search Order">
-                </div> -->
+                
 
                 <div class="content">
                     <?php

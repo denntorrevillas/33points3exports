@@ -39,6 +39,8 @@ $stmt->close();
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
     <link rel="stylesheet" href="../styles/style.css?v=1.0">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
     <div class="top">
@@ -129,7 +131,7 @@ $stmt->close();
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
+                        $allowed_pages = ['accounting','shipping','production','monitoring','dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";
@@ -144,6 +146,10 @@ $stmt->close();
             </div>
         </div>
     </div>
+
+     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>

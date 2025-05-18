@@ -122,7 +122,7 @@ $stmt->close();
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'accounting', 'monitoring', 'production']; // Whitelist pages
+                        $allowed_pages = ['shipping','dashboard', 'accounting', 'monitoring', 'production']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

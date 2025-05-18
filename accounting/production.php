@@ -77,7 +77,7 @@ $conn->close();
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Production Table</b></h2>
         <hr>
 
@@ -93,7 +93,7 @@ $conn->close();
                         <th>Deadline</th>
                         <th>Days Left</th>
                         <th>Lead Time</th>
-                        <th >Action</th>
+                
                     </tr>
                 </thead>
                 <tbody>
@@ -109,11 +109,7 @@ $conn->close();
                                 
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                                <td style="text-align:center";>
-                               <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                    <img src="../assets/edit2.png" alt="Edit" />
-                                </button>
-                            </td>
+                               
                             </tr>
 
                             <!-- Modal for editing each row -->

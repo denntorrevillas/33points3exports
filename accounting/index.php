@@ -114,17 +114,14 @@ $stmt->close();
         <!-- Content Area -->
         <div class="table-div">
             <div class="table-div-content">
-                <!-- Search Bar -->
-                <div class="search-container mb-4">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search Order">
-                </div>
+              
 
                 <div class="content">
                     <?php
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'accounting']; // Whitelist pages
+                       $allowed_pages = ['accounting','shipping','production','monitoring','dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; 
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

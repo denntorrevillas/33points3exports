@@ -38,37 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $gmApproved = $_POST['gmApproved'] ?? null;
     $supplierPOIssued = $_POST['supplierPOIssued'] ?? null;
 
-    // Validate required fields
-    if ($supplierEvaluated && $supplierPOCreated && $gmApproved && $supplierPOIssued) {
-        // Update query
-        $updateQuery = "
-            UPDATE monitoring 
-            SET supplierEvaluated = ?, 
-                supplierPOCreated = ?, 
-                gmApproved = ?, 
-                supplierPOIssued = ?
-            WHERE poNumber = ?";
-        $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param(
-            "sssss", 
-            $supplierEvaluated, 
-            $supplierPOCreated, 
-            $gmApproved, 
-            $supplierPOIssued, 
-            $poNumber
-        );
 
-        if ($stmt->execute()) {
-            echo "<script>alert('Record updated successfully!');</script>";
-            echo "<script>window.location.href = window.location.href;</script>";
-        } else {
-            echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
-        }
-
-        $stmt->close();
-    } else {
-        echo "<script>alert('All fields are required!');</script>";
-    }
 }
 
 // Close the database connection
@@ -101,7 +71,7 @@ $conn->close();
                         <th>Deadline</th>
                         <th>Days Left</th>
                         <th>Lead Time</th>
-                        <th>Action</th>
+                       
                     </tr>
                 </thead>
                 <tbody>
@@ -117,12 +87,7 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                                <td>
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                    <img src="../assets/edit2.png" alt="Edit" />
-                                </button>
-                                    </button>
-                                </td>
+                              
                             </tr>
 
                             <!-- Modal for editing each row -->

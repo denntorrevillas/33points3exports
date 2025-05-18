@@ -210,3 +210,9 @@ tr:nth-child(even) {
     .log-out a{
         color: #004226;
     }
+    .no-border {
+    border: none;
+    background: none;
+    padding: 0; /* Optional: Removes any padding for a cleaner look */
+    outline: none; /* Removes the focus outline, if any */
+}

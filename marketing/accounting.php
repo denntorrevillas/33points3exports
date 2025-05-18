@@ -15,24 +15,24 @@ if ($result) {
 }
 
 // Handle the update
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
-    $poNumber = $_POST['poNumber'];
-    $receivedCopy = $_POST['receivedCopy'];
-    $paymentReceived = $_POST['paymentReceived'];
+// if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
+//     $poNumber = $_POST['poNumber'];
+//     $receivedCopy = $_POST['receivedCopy'];
+//     $paymentReceived = $_POST['paymentReceived'];
 
-    // Update query
-    $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
+//     // Update query
+//     $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
+//     $stmt = $conn->prepare($updateQuery);
+//     $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-    } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
-    }
+//     if ($stmt->execute()) {
+//         echo "<script>alert('Record updated successfully!');</script>";
+//     } else {
+//         echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+//     }
 
-    $stmt->close();
-}
+//     $stmt->close();
+// }
 
 // Close the connection
 $conn->close();
@@ -61,8 +61,7 @@ $conn->close();
                     <th>Deadline</th>
                     <th>Days Left</th>
                     <th>Lead Time</th>
-                    <th>Action</th>
-                    
+               
                 </tr>
             </thead>
             <tbody>
@@ -76,11 +75,11 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                              <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                            <td>
+                            <!-- <td>
                                     <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
                                         <img src="../assets/edit2.png" alt="Edit" />
                                     </button>
-                            </td>
+                            </td> -->
                         </tr>
 
                         <!-- Modal for editing each row -->
