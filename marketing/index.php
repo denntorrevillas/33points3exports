@@ -98,10 +98,17 @@ $stmt->close();
                         <a href="?page=shipping">Shipping Department</a>
                     </div>  
 
+                     
+
                     <div class="nav-li">
                         <img src="../assets/track.png" alt="">
                         <a href="?page=tracking">Track Order</a>
                     </div> 
+
+                    <div class="nav-li">
+                        <img src="../assets/history.png" alt="">
+                        <a href="?page=history">Marketing History</a>
+                    </div>  
                 </ul>
             </div>
 
@@ -122,7 +129,7 @@ $stmt->close();
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['dashboard', 'add_order', 'marketing_history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
+                        $allowed_pages = ['dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

@@ -1,38 +1,83 @@
 <?php
-// Include the database connection
+// session_start();
 include '../db.php'; // Assuming the database connection is in db.php
 
 // Query to fetch data from the marketing table
 $query = "SELECT * FROM marketing";
 $result = $conn->query($query);
 
-// Check if there are any results
 if ($result->num_rows > 0) {
     $marketingData = $result->fetch_all(MYSQLI_ASSOC);
 } else {
     $marketingData = [];
 }
 
-// Handle the update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $receivedOrder = $_POST['receivedOrder'];
-    $businessAward = $_POST['businessAward'];
-    $endorsedToGM = $_POST['endorsedToGM'];
-    $leadTime = isset($_POST['leadTime']) ? $_POST['leadTime'] : NULL; // Allow blank (NULL) value for leadTime
+    $receivedOrderNew = $_POST['receivedOrder'] ?? 'Not Started';
+    $businessAwardNew = $_POST['businessAward'] ?? 'Not Started';
+    $endorsedToGMNew = $_POST['endorsedToGM'] ?? 'Not Started';
+    $leadTimeNew = isset($_POST['leadTime']) && $_POST['leadTime'] !== '' ? $_POST['leadTime'] : NULL;
 
-    // Update query
-    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sssss", $receivedOrder, $businessAward, $endorsedToGM, $leadTime, $poNumber);
+   // Fetch old values for comparison
+$fetchOld = $conn->prepare("SELECT receivedOrder, businessAward, endorsedToGM, leadTime FROM marketing WHERE poNumber = ?");
+$fetchOld->bind_param("s", $poNumber);
+$fetchOld->execute();
+$fetchOld->store_result();
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-    } else {
-        echo "<script>alert('Error updating record!');</script>";
+// Initialize variables
+$receivedOrderOld = $businessAwardOld = $endorsedToGMOld = $leadTimeOld = null;
+
+$fetchOld->bind_result($receivedOrderOld, $businessAwardOld, $endorsedToGMOld, $leadTimeOld);
+$fetchOld->fetch();
+$fetchOld->close();
+
+// Update marketing table
+$updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
+$stmt = $conn->prepare($updateQuery);
+$stmt->bind_param("sssss", $receivedOrderNew, $businessAwardNew, $endorsedToGMNew, $leadTimeNew, $poNumber);
+
+if ($stmt->execute()) {
+    // Prepare to insert into history table
+    
+   $staff_id = $_SESSION['staff_id'] ?? 'Unknown';
+    $department = 'marketing';
+
+    $historyInsert = $conn->prepare("INSERT INTO history (poNumber, columnName, oldValue, newValue, actionBy, department) VALUES (?, ?, ?, ?, ?, ?)");
+
+    // Check each changed column and insert into history
+    if ($receivedOrderOld !== $receivedOrderNew) {
+        $columnName = 'receivedOrder';
+        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $receivedOrderOld, $receivedOrderNew, $staff_id, $department);
+        $historyInsert->execute();
+    }
+    if ($businessAwardOld !== $businessAwardNew) {
+        $columnName = 'businessAward';
+        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $businessAwardOld, $businessAwardNew, $staff_id, $department);
+        $historyInsert->execute();
+    }
+    if ($endorsedToGMOld !== $endorsedToGMNew) {
+        $columnName = 'endorsedToGM';
+        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $endorsedToGMOld, $endorsedToGMNew, $staff_id, $department);
+        $historyInsert->execute();
+    }
+    if ((string)$leadTimeOld !== (string)$leadTimeNew) {
+        $columnName = 'leadTime';
+        $oldVal = $leadTimeOld === null ? 'NULL' : $leadTimeOld;
+        $newVal = $leadTimeNew === null ? 'NULL' : $leadTimeNew;
+        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $oldVal, $newVal, $staff_id, $department);
+        $historyInsert->execute();
     }
 
-    $stmt->close();
+    $historyInsert->close();
+
+    echo "<script>alert('Record updated successfully!');</script>";
+} else {
+    echo "<script>alert('Error updating record!');</script>";
+}
+
+$stmt->close();
+
 }
 
 $conn->close();
@@ -41,14 +86,14 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Marketing Department</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
 </head>
 <body>
     <h2><b>Marketing Department</b></h2>
-    <hr>
+    <hr />
 
     <div class="table-div" style="overflow-x:auto;">
         <table class="table">
@@ -60,7 +105,7 @@ $conn->close();
                     <th>Endorsed to GM</th>
                     <th>Order Received</th>
                     <th>Deadline</th>
-                     <th>Days Left</th>
+                    <th>Days Left</th>
                     <th>Lead Time</th>
                     <th>Action</th>
                 </tr>
@@ -79,7 +124,7 @@ $conn->close();
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
                                 <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit">
+                                    <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
                         </tr>
@@ -96,7 +141,7 @@ $conn->close();
                                     </div>
                                     <form method="POST" action="">
                                         <div class="modal-body">
-                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
 
                                             <div class="form-group">
                                                 <label for="receivedOrder">Received Order</label>
@@ -124,6 +169,11 @@ $conn->close();
                                                     <option value="Completed" <?= $data['endorsedToGM'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                 </select>
                                             </div>
+
+                                            <div class="form-group">
+                                                <label for="leadTime">Lead Time</label>
+                                                <input type="number" class="form-control" name="leadTime" value="<?= htmlspecialchars($data['leadTime']); ?>" />
+                                            </div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -136,32 +186,27 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="8">No data found in the Marketing Department.</td>
+                        <td colspan="9">No data found in the Marketing Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Iterate through each modal
         document.querySelectorAll('.modal').forEach(modal => {
             const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
             const businessAwardSelect = modal.querySelector('[name="businessAward"]');
             const endorsedToGMSelect = modal.querySelector('[name="endorsedToGM"]');
 
-            // Function to toggle the disabled state of dropdowns
             const toggleDisableState = () => {
                 const isReceivedOrderCompleted = receivedOrderSelect.value === 'Completed';
                 const isBusinessAwardCompleted = businessAwardSelect.value === 'Completed';
 
-                // Enable/disable based on the state of the previous dropdown
                 businessAwardSelect.disabled = !isReceivedOrderCompleted;
                 endorsedToGMSelect.disabled = !isBusinessAwardCompleted;
 
-                // Reset values if disabled
                 if (!isReceivedOrderCompleted) {
                     businessAwardSelect.value = 'Not Started';
                 }
@@ -170,16 +215,13 @@ $conn->close();
                 }
             };
 
-            // Initial state check on modal load
             toggleDisableState();
 
-            // Add event listeners to monitor changes
             receivedOrderSelect.addEventListener('change', toggleDisableState);
             businessAwardSelect.addEventListener('change', toggleDisableState);
         });
     });
-</script>
-
+    </script>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
