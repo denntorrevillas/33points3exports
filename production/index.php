@@ -133,7 +133,7 @@ $stmt->close();
                             echo "<p>Page not found.</p>";
                         }
                     } else {
-                        include "dashboard.php"; // Default page
+                        include "indexboard.php"; // Default page
                     }
                     ?>
                 </div>
