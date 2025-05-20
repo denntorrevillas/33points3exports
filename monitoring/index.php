@@ -97,7 +97,7 @@ $stmt->close();
 
                     <div class="nav-li">
                         <img src="../assets/track.png" alt="">
-                        <a href="?page=shipping">Track Order</a>
+                        <a href="?page=tracking">Track Order</a>
                     </div> 
 
                 </ul>

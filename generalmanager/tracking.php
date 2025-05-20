@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    include 'db.php';
+    include '../db.php';
 
     $poNumber = $_POST['poNumber'] ?? '';
 
@@ -54,21 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8" />
 <title>PO Tracking Timeline - Minimal</title>
 <!-- Poppins Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: #fafafa;
-    color: #222;
-    padding: 2rem;
-  }
+
   .container {
     max-width: 600px;
     margin: auto;
     background: white;
     padding: 1.5rem 2rem;
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+    /* box-shadow: 0 2px 6px rgb(0 0 0 / 0.1); */
   }
   h2 {
     text-align: center;
