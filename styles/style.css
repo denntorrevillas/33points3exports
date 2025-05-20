@@ -40,7 +40,7 @@ body{
     background-color:#ffffff ;
     width: 20%;
     /* height:max-content; */
-    height: 90vh;
+    height: 100%;
     color: #1d503a;
      padding: 0px 16px 24px 16px;
      
@@ -59,6 +59,7 @@ body{
 .navigations{
     position: sticky;
     top: 0;
+    margin-top: 36px;
 }
 .navigations a{
     font-size: 16px;

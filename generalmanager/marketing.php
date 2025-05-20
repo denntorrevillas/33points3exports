@@ -47,6 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     if ($stmt->execute()) {
         echo "<script>alert('Record updated successfully!');</script>";
+         echo "<script>window.location.href = window.location.href;</script>";
+    
     } else {
         echo "<script>alert('Error updating record!');</script>";
     }

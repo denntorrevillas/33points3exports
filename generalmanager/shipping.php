@@ -16,39 +16,32 @@ if ($result->num_rows > 0) {
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $leadTime = (int)$_POST['leadTime'];  // Lead Time input
+    $leadTime = (int)$_POST['leadTime'];  // New Lead Time input
 
-    // Fetch the current daysLeft from the database
-    $daysLeftQuery = "SELECT daysLeft FROM shipping WHERE poNumber = ?";
-    $stmt = $conn->prepare($daysLeftQuery);
-    $stmt->bind_param("s", $poNumber);
-    $stmt->execute();
-    $stmt->bind_result($currentDaysLeft);
-    $stmt->fetch();
-    $stmt->close();
+    // Align `daysLeft` to the new `leadTime`
+    $daysLeft = $leadTime;
 
-    // Add leadTime to the current daysLeft
-    $newDaysLeft = $currentDaysLeft + $leadTime;
+    // Calculate the new deadline from today's date + leadTime
+    $deadline = date('Y-m-d', strtotime("+$leadTime days"));
 
-    // Calculate the new deadline from current date + newDaysLeft
-    $deadline = date('Y-m-d', strtotime("+$newDaysLeft days"));
-
-    // Update query — update only daysLeft and deadline
+    // Update query — update leadTime, daysLeft, and deadline
     $updateQuery = "
         UPDATE shipping 
-        SET daysLeft = ?, 
+        SET leadTime = ?, 
+            daysLeft = ?, 
             deadline = ? 
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "dss",
-        $newDaysLeft,
+        "idss",
+        $leadTime,
+        $daysLeft,
         $deadline,
         $poNumber
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('Lead Time added to Days Left successfully!');</script>";
+        echo "<script>alert('Lead Time updated successfully!');</script>";
         echo "<script>window.location.href = window.location.href;</script>";
     } else {
         echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
@@ -56,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     $stmt->close();
 }
-
 
 // Close the database connection
 $conn->close();
@@ -95,7 +87,7 @@ $conn->close();
                     <?php if (!empty($shippingData)) : ?>
                         <?php foreach ($shippingData as $data) : ?>
                             <tr>
-                                <td>PO<?= htmlspecialchars($data['poNumber']); ?></td>
+                                <td><?= htmlspecialchars($data['poNumber']); ?></td>
                                 <td><?= htmlspecialchars($data['pre_loading']); ?></td>
                                 <td><?= htmlspecialchars($data['loading']); ?></td>
                                 <td><?= htmlspecialchars($data['transported']); ?></td>
@@ -111,7 +103,7 @@ $conn->close();
                                 </td>
                             </tr>
 
-                            <!-- Modal for editing Lead Time only -->
+                            <!-- Modal for editing Lead Time -->
                             <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
@@ -123,23 +115,16 @@ $conn->close();
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
+                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
 
-                                                <!-- Lead Time input field only -->
+                                                <!-- Lead Time input field -->
                                                 <div class="form-group">
                                                     <label>Lead Time (Days)</label>
-                                                    <input type="number" name="leadTime" value="<?= $data['leadTime']; ?>" class="form-control" min="0" required />
+                                                    <input type="number" name="leadTime" value="<?= htmlspecialchars($data['leadTime']); ?>" class="form-control" min="0" required />
                                                 </div>
 
-                                                <!-- Display calculated Deadline and Days Left as readonly -->
-                                                <div class="form-group">
-                                                    <label>Deadline</label>
-                                                    <input type="text" value="<?= $data['deadline']; ?>" class="form-control" readonly />
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Days Left</label>
-                                                    <input type="text" value="<?= round($data['daysLeft'], 2); ?>" class="form-control" readonly />
-                                                </div>
+                                                <!-- Display calculated Deadline and Days Left -->
+                                             
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $buyer = $_POST['buyer'];
     $leadTime = (int)$_POST['leadTime'];
 
-    $orderDate = date('Y-m-d');
+   $orderDate = date('Y-m-d H:i:s');
     $shipDate = date('Y-m-d', strtotime("+$leadTime days"));
     $daysLeft = $leadTime;
     $overallStatus = "Not Started";
@@ -36,28 +36,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("ssssiss", $poNumber, $buyer, $orderDate, $shipDate, $daysLeft, $leadTime, $overallStatus);
 
         if ($stmt->execute()) {
-            // SweetAlert2 success script
-            echo "<script>
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Order has been added successfully.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = 'dashboard.php'; // Redirect on confirmation
-                    }
-                });
-            </script>";
+           
+             echo "<script>alert('Record updated successfully!');
+             window.location.reload();
+             </script>";
+            
+       
         } else {
-            echo "<script>
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Execution error: " . $stmt->error . "',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            </script>";
+           echo "<script>alert('Record update failed!');</script>";
+         echo "<script>window.location.href = window.location.href;</script>";
         }
 
         $stmt->close();

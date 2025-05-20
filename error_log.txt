@@ -1,0 +1,20 @@
+[20-May-2025 19:07:03 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'productionStart' in 'field list' in C:\xampp\htdocs\33point3exports\tracking.php:35
+Stack trace:
+#0 C:\xampp\htdocs\33point3exports\tracking.php(35): mysqli->prepare('SELECT poNumber...')
+#1 {main}
+  thrown in C:\xampp\htdocs\33point3exports\tracking.php on line 35
+[20-May-2025 19:07:11 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'productionStart' in 'field list' in C:\xampp\htdocs\33point3exports\tracking.php:35
+Stack trace:
+#0 C:\xampp\htdocs\33point3exports\tracking.php(35): mysqli->prepare('SELECT poNumber...')
+#1 {main}
+  thrown in C:\xampp\htdocs\33point3exports\tracking.php on line 35
+[20-May-2025 19:07:12 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'productionStart' in 'field list' in C:\xampp\htdocs\33point3exports\tracking.php:35
+Stack trace:
+#0 C:\xampp\htdocs\33point3exports\tracking.php(35): mysqli->prepare('SELECT poNumber...')
+#1 {main}
+  thrown in C:\xampp\htdocs\33point3exports\tracking.php on line 35
+[20-May-2025 19:07:12 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'productionStart' in 'field list' in C:\xampp\htdocs\33point3exports\tracking.php:35
+Stack trace:
+#0 C:\xampp\htdocs\33point3exports\tracking.php(35): mysqli->prepare('SELECT poNumber...')
+#1 {main}
+  thrown in C:\xampp\htdocs\33point3exports\tracking.php on line 35

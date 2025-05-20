@@ -186,7 +186,7 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="9">No data found in the Marketing Department.</td>
+                        <td class="text-center" colspan="9">No data found in the Marketing Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

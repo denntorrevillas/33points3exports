@@ -78,15 +78,15 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monitoring Table</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
 </head>
 <body>
     <div class="container">
         <h2><b>Monitoring</b></h2>
-        <hr>
+        <hr />
 
         <div class="table-div">
             <table class="table table-bordered table-striped">
@@ -108,25 +108,24 @@ $conn->close();
                     <?php if (!empty($monitoringData)) : ?>
                         <?php foreach ($monitoringData as $data) : ?>
                             <tr>
-                                <td><?= htmlspecialchars($data['poNumber']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierEvaluated']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOCreated']); ?></td>
-                                <td><?= htmlspecialchars($data['gmApproved']); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOIssued']); ?></td>
-                                <td><?= htmlspecialchars($data['dateReceived']); ?></td>
-                                <td><?= htmlspecialchars($data['deadline']); ?></td>
-                                <td><?= htmlspecialchars($data['daysLeft']); ?></td>
-                                <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                                <td><?= htmlspecialchars($data['poNumber'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['supplierEvaluated'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['supplierPOCreated'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['gmApproved'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['supplierPOIssued'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['dateReceived'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['deadline'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['daysLeft'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['leadTime'] ?? ''); ?></td>
                                 <td>
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                    <img src="../assets/edit2.png" alt="Edit" />
-                                </button>
+                                    <button data-toggle="modal" data-target="#editModal<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" style="border: none; background: none; padding: 0; outline: none;">
+                                        <img src="../assets/edit2.png" alt="Edit" />
                                     </button>
                                 </td>
                             </tr>
 
                             <!-- Modal for editing each row -->
-                            <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog">
+                            <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" tabindex="-1" role="dialog" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -137,39 +136,39 @@ $conn->close();
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" />
 
                                                 <!-- Dropdown fields -->
                                                 <div class="form-group">
                                                     <label>Supplier Evaluated</label>
                                                     <select name="supplierEvaluated" class="form-control">
-                                                        <option value="Not Started" <?= $data['supplierEvaluated'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= $data['supplierEvaluated'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= $data['supplierEvaluated'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                        <option value="Not Started" <?= ($data['supplierEvaluated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                                                        <option value="In Progress" <?= ($data['supplierEvaluated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                                                        <option value="Completed" <?= ($data['supplierEvaluated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Supplier PO Created</label>
                                                     <select name="supplierPOCreated" class="form-control">
-                                                        <option value="Not Started" <?= $data['supplierPOCreated'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= $data['supplierPOCreated'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= $data['supplierPOCreated'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                        <option value="Not Started" <?= ($data['supplierPOCreated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                                                        <option value="In Progress" <?= ($data['supplierPOCreated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                                                        <option value="Completed" <?= ($data['supplierPOCreated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>GM Approved</label>
                                                     <select name="gmApproved" class="form-control">
-                                                        <option value="Not Started" <?= $data['gmApproved'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= $data['gmApproved'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= $data['gmApproved'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                        <option value="Not Started" <?= ($data['gmApproved'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                                                        <option value="In Progress" <?= ($data['gmApproved'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                                                        <option value="Completed" <?= ($data['gmApproved'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Supplier PO Issued</label>
                                                     <select name="supplierPOIssued" class="form-control">
-                                                        <option value="Not Started" <?= $data['supplierPOIssued'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= $data['supplierPOIssued'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= $data['supplierPOIssued'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                        <option value="Not Started" <?= ($data['supplierPOIssued'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
+                                                        <option value="In Progress" <?= ($data['supplierPOIssued'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                                                        <option value="Completed" <?= ($data['supplierPOIssued'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
                                             </div>

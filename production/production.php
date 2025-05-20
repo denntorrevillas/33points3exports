@@ -77,7 +77,7 @@ $conn->close();
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Production Table</b></h2>
         <hr>
 

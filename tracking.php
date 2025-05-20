@@ -1,67 +1,56 @@
 <?php
-// Enable error reporting for debugging - remove in production!
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// tracking.php
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    include 'db.php'; // Include database connection
+header('Content-Type: application/json');
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-    if (!$conn) {
-        die(json_encode(['status' => 'error', 'message' => 'Database connection failed: ' . mysqli_connect_error()]));
-    }
+// Database credentials — change these to your own!
+include 'db.php';
+try {
+    $conn = new mysqli($host, $user, $pass, $db);
+    $conn->set_charset("utf8mb4");
 
-    $poNumber = $_POST['poNumber'] ?? '';
-
-    if (empty($poNumber)) {
-        die(json_encode(['status' => 'error', 'message' => 'PO Number is required']));
-    }
-
-    // Queries for each department
-    $queries = [
-        'marketing' => "SELECT poNumber, receivedOrder, businessAward, endorsedToGM, orderReceived, deadline, daysLeft, leadTime FROM marketing WHERE poNumber = ?",
-        'accounting' => "SELECT poNumber, receivedCopy, paymentReceived, dateReceived, deadline, daysLeft, leadTime FROM accounting WHERE poNumber = ?",
-        'monitoring' => "SELECT poNumber, supplierEvaluated, supplierPOCreated, gmApproved, supplierPOIssued, dateReceived, deadline, daysLeft, leadTime FROM monitoring WHERE poNumber = ?",
-        'production' => "SELECT poNumber, productionStart, productionEnd, quantityProduced FROM production WHERE poNumber = ?",
-        'shipping' => "SELECT poNumber, shippedDate, deliveredDate, trackingNumber FROM shipping WHERE poNumber = ?",
-    ];
-
-    $results = []; // To store results from all tables
-
-    // Fetch data from each table with error checking
-    foreach ($queries as $department => $query) {
-        $stmt = $conn->prepare($query);
-        if (!$stmt) {
-            die(json_encode(['status' => 'error', 'message' => "Prepare failed for $department: " . $conn->error]));
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $poNumber = filter_input(INPUT_POST, 'poNumber', FILTER_SANITIZE_STRING);
+        if (!$poNumber) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid or missing PO Number']);
+            exit;
         }
 
-        $stmt->bind_param("s", $poNumber);
+        // Example with 3 departments - add more if needed
+        $queries = [
+            'marketing' => "SELECT poNumber, receivedOrder, businessAward, endorsedToGM, orderReceived, deadline, daysLeft, leadTime FROM marketing WHERE poNumber = ?",
+            'accounting' => "SELECT poNumber, receivedCopy, paymentReceived, dateReceived, deadline, daysLeft, leadTime FROM accounting WHERE poNumber = ?",
+            'monitoring' => "SELECT poNumber, supplierEvaluated, supplierPOCreated, gmApproved, supplierPOIssued, dateReceived, deadline, daysLeft, leadTime FROM monitoring WHERE poNumber = ?",
+            // Add more if needed
+        ];
 
-        if (!$stmt->execute()) {
-            die(json_encode(['status' => 'error', 'message' => "Execute failed for $department: " . $stmt->error]));
+        $results = [];
+
+        foreach ($queries as $dept => $sql) {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $poNumber);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $data = $res->fetch_assoc();
+            $results[$dept] = $data ?: null;
+            $stmt->close();
         }
 
-        $result = $stmt->get_result();
+        $conn->close();
 
-        if ($result->num_rows > 0) {
-            $results[$department] = $result->fetch_assoc();
-        } else {
-            $results[$department] = null;
+        if (count(array_filter($results)) === 0) {
+            http_response_code(404);
+            echo json_encode(['status' => 'error', 'message' => 'Order not found in any department']);
+            exit;
         }
 
-        $stmt->close();
-    }
-
-    $conn->close();
-
-    if (!empty(array_filter($results))) {
         echo json_encode(['status' => 'success', 'data' => $results]);
+        exit;
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Order not found in any department!']);
-    }
-    exit();
-}
-?>
+        // Show HTML frontend if GET or others
+        ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tracking System</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" /> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body class="bg-light">
     <div class="container mt-5">
@@ -102,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            fetch('tracking.php', {
+            fetch('', { // POST to same PHP file
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `poNumber=${encodeURIComponent(poNumber)}`
@@ -164,38 +153,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>`;
                         }
 
-                        // Production
-                        if (d.production) {
-                            html += `<div class="card mb-3">
-                                <div class="card-header">Production Department</div>
-                                <div class="card-body">
-                                    <p><strong>PO Number:</strong> ${d.production.poNumber}</p>
-                                    <p><strong>Production Start:</strong> ${d.production.productionStart || 'N/A'}</p>
-                                    <p><strong>Production End:</strong> ${d.production.productionEnd || 'N/A'}</p>
-                                    <p><strong>Quantity Produced:</strong> ${d.production.quantityProduced || 'N/A'}</p>
-                                </div>
-                            </div>`;
-                        }
-
-                        // Shipping
-                        if (d.shipping) {
-                            html += `<div class="card mb-3">
-                                <div class="card-header">Shipping Department</div>
-                                <div class="card-body">
-                                    <p><strong>PO Number:</strong> ${d.shipping.poNumber}</p>
-                                    <p><strong>Shipped Date:</strong> ${d.shipping.shippedDate || 'N/A'}</p>
-                                    <p><strong>Delivered Date:</strong> ${d.shipping.deliveredDate || 'N/A'}</p>
-                                    <p><strong>Tracking Number:</strong> ${d.shipping.trackingNumber || 'N/A'}</p>
-                                </div>
-                            </div>`;
-                        }
-
                         resultDiv.innerHTML = html;
                     } else {
                         resultDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
                     }
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.error('Fetch error:', error);
                     resultDiv.innerHTML = '<div class="alert alert-danger">An error occurred. Please try again.</div>';
                 });
@@ -203,3 +166,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 </body>
 </html>
+
+<?php
+    }
+} catch (mysqli_sql_exception $e) {
+    error_log("DB Error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Internal server error']);
+    exit;
+}
+?>
