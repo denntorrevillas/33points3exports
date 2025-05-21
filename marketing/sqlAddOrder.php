@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt->execute()) {
            
              echo "<script>alert('Record updated successfully!');
-             window.location.reload();
+           
              </script>";
             
        

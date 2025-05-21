@@ -3,7 +3,15 @@
 include '../db.php'; // Assuming the database connection is in db.php
 
 // Query to fetch data from the marketing table
-$query = "SELECT * FROM marketing";
+$query = "
+SELECT * FROM marketing
+WHERE NOT (
+    TRIM(LOWER(receivedOrder)) = 'Completed'
+    AND TRIM(LOWER(businessAward)) = 'Completed'
+    AND TRIM(LOWER(endorsedToGM)) = 'Completed'
+);
+";
+
 $result = $conn->query($query);
 
 if ($result->num_rows > 0) {
