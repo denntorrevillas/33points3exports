@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             daysLeft = ?, 
             deadline = ? 
         WHERE poNumber = ?";
+        
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
         "ssssiss", 

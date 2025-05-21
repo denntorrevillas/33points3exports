@@ -67,7 +67,7 @@ $stmt->close();
                <ul>       
                      <div class="nav-li">
                         <img src="../assets/dashboard.png" alt="">
-                        <a h  ref="?page=dashboard">Dashboard</a>
+                        <a href="?page=dashboard">Dashboard</a>
                     </div>
 
                     <div class="nav-li">

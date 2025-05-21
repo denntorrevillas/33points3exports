@@ -7,7 +7,7 @@ $error = '';
 $poNumber = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    include 'db.php';  // your database connection
+    include 'db.php'; // your database connection
 
     $poNumber = trim($_POST['poNumber'] ?? '');
 
@@ -18,22 +18,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             SELECT 
                 m.poNumber,
                 m.orderreceived AS marketing_datereceived,
+                m.dateCompleted AS marketing_dateCompleted,
+                m.completionSpan AS marketing_completionSpan,
                 m.receivedOrder,
                 m.businessAward,
                 m.endorsedToGM,
+
                 a.datereceived AS accounting_datereceived,
+                a.dateCompleted AS accounting_dateCompleted,
+                a.completionSpan AS accounting_completionSpan,
                 a.receivedCopy,
                 a.paymentReceived,
+
                 mo.datereceived AS monitoring_datereceived,
+                mo.dateCompleted AS monitoring_dateCompleted,
+                mo.completionSpan AS monitoring_completionSpan,
                 mo.supplierEvaluated,
                 mo.supplierPOCreated,
                 mo.gmApproved,
                 mo.supplierPOIssued,
+
                 p.datereceived AS production_datereceived,
+                p.dateCompleted AS production_dateCompleted,
+                p.completionSpan AS production_completionSpan,
                 p.finishing,
                 p.packed,
                 p.inspected,
+
                 s.datereceived AS shipping_datereceived,
+                s.dateCompleted AS shipping_dateCompleted,
+                s.completionSpan AS shipping_completionSpan,
                 s.pre_loading,
                 s.loading,
                 s.transported,
@@ -77,11 +91,9 @@ function statusClass($value) {
     } elseif ($val === 'completed') {
         return 'status-completed';
     } else {
-        // Treat empty, n/a, null, or other unknown as gray
         if ($val === '' || $val === 'n/a' || $val === 'na' || $val === 'null') {
             return 'status-na';
         }
-        // Default fallback to gray as well
         return 'status-na';
     }
 }
@@ -92,7 +104,6 @@ function statusClass($value) {
 <head>
 <meta charset="UTF-8" />
 <title>PO Tracking Timeline - Minimal</title>
-<!-- Poppins Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
   body {
@@ -230,6 +241,8 @@ function statusClass($value) {
       <div class="timeline-event">
         <h3>Marketing Department</h3>
         <div class="field"><span class="label">Order Received:</span> <span class="<?= statusClass($data['marketing_datereceived'] ?? '') ?>"><?= htmlspecialchars($data['marketing_datereceived'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Date Completed:</span> <span><?= htmlspecialchars($data['marketing_dateCompleted'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Completion Span:</span> <span><?= htmlspecialchars($data['marketing_completionSpan'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Received Order:</span> <span class="<?= statusClass($data['receivedOrder'] ?? '') ?>"><?= htmlspecialchars($data['receivedOrder'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Business Award:</span> <span class="<?= statusClass($data['businessAward'] ?? '') ?>"><?= htmlspecialchars($data['businessAward'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Endorsed To GM:</span> <span class="<?= statusClass($data['endorsedToGM'] ?? '') ?>"><?= htmlspecialchars($data['endorsedToGM'] ?? 'N/A') ?></span></div>
@@ -238,6 +251,8 @@ function statusClass($value) {
       <div class="timeline-event">
         <h3>Accounting Department</h3>
         <div class="field"><span class="label">Order Received:</span> <span class="<?= statusClass($data['accounting_datereceived'] ?? '') ?>"><?= htmlspecialchars($data['accounting_datereceived'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Date Completed:</span> <span><?= htmlspecialchars($data['accounting_dateCompleted'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Completion Span:</span> <span><?= htmlspecialchars($data['accounting_completionSpan'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Received Copy:</span> <span class="<?= statusClass($data['receivedCopy'] ?? '') ?>"><?= htmlspecialchars($data['receivedCopy'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Payment Received:</span> <span class="<?= statusClass($data['paymentReceived'] ?? '') ?>"><?= htmlspecialchars($data['paymentReceived'] ?? 'N/A') ?></span></div>
       </div>
@@ -245,6 +260,8 @@ function statusClass($value) {
       <div class="timeline-event">
         <h3>Monitoring Department</h3>
         <div class="field"><span class="label">Order Received:</span> <span class="<?= statusClass($data['monitoring_datereceived'] ?? '') ?>"><?= htmlspecialchars($data['monitoring_datereceived'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Date Completed:</span> <span><?= htmlspecialchars($data['monitoring_dateCompleted'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Completion Span:</span> <span><?= htmlspecialchars($data['monitoring_completionSpan'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Supplier Evaluated:</span> <span class="<?= statusClass($data['supplierEvaluated'] ?? '') ?>"><?= htmlspecialchars($data['supplierEvaluated'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Supplier PO Created:</span> <span class="<?= statusClass($data['supplierPOCreated'] ?? '') ?>"><?= htmlspecialchars($data['supplierPOCreated'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">GM Approved:</span> <span class="<?= statusClass($data['gmApproved'] ?? '') ?>"><?= htmlspecialchars($data['gmApproved'] ?? 'N/A') ?></span></div>
@@ -254,6 +271,8 @@ function statusClass($value) {
       <div class="timeline-event">
         <h3>Production Department</h3>
         <div class="field"><span class="label">Order Received:</span> <span class="<?= statusClass($data['production_datereceived'] ?? '') ?>"><?= htmlspecialchars($data['production_datereceived'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Date Completed:</span> <span><?= htmlspecialchars($data['production_dateCompleted'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Completion Span:</span> <span><?= htmlspecialchars($data['production_completionSpan'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Finishing:</span> <span class="<?= statusClass($data['finishing'] ?? '') ?>"><?= htmlspecialchars($data['finishing'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Packed:</span> <span class="<?= statusClass($data['packed'] ?? '') ?>"><?= htmlspecialchars($data['packed'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Inspected:</span> <span class="<?= statusClass($data['inspected'] ?? '') ?>"><?= htmlspecialchars($data['inspected'] ?? 'N/A') ?></span></div>
@@ -262,14 +281,17 @@ function statusClass($value) {
       <div class="timeline-event">
         <h3>Shipping Department</h3>
         <div class="field"><span class="label">Order Received:</span> <span class="<?= statusClass($data['shipping_datereceived'] ?? '') ?>"><?= htmlspecialchars($data['shipping_datereceived'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Date Completed:</span> <span><?= htmlspecialchars($data['shipping_dateCompleted'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Completion Span:</span> <span><?= htmlspecialchars($data['shipping_completionSpan'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Pre Loading:</span> <span class="<?= statusClass($data['pre_loading'] ?? '') ?>"><?= htmlspecialchars($data['pre_loading'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Loading:</span> <span class="<?= statusClass($data['loading'] ?? '') ?>"><?= htmlspecialchars($data['loading'] ?? 'N/A') ?></span></div>
         <div class="field"><span class="label">Transported:</span> <span class="<?= statusClass($data['transported'] ?? '') ?>"><?= htmlspecialchars($data['transported'] ?? 'N/A') ?></span></div>
-        <div class="field"><span class="label">Delivered To Customer:</span> <span class="<?= statusClass($data['delivered_to_customer'] ?? '') ?>"><?= htmlspecialchars($data['delivered_to_customer'] ?? 'N/A') ?></span></div>
+        <div class="field"><span class="label">Delivered to Customer:</span> <span class="<?= statusClass($data['delivered_to_customer'] ?? '') ?>"><?= htmlspecialchars($data['delivered_to_customer'] ?? 'N/A') ?></span></div>
       </div>
 
     </div>
   <?php endif; ?>
+
 </div>
 
 </body>

@@ -41,8 +41,8 @@ $conn->close();
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-<div class="container mt-4">
-    <h2>Shipping Table</h2>
+<div class="container">
+    <h2><b>Shipping Table</b></h2>
     <hr />
     <div style="overflow-x:auto;">
         <table class="table table-bordered table-striped">

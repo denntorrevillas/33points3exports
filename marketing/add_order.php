@@ -40,8 +40,8 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
             </div>
         <?php endif; ?>
 
-        <div class="table-responsive">
-            <table id="ordersTable">
+        <div class="table-div">
+            <table id="table">
                 <thead>
                     <tr>
                         <th>PO No.</th>

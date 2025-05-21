@@ -37,7 +37,7 @@ $stmt->close();
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
-    <link rel="stylesheet" href="../styles/style.css?v=1.0">
+    <link rel="stylesheet" href="../styles/style.css">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -111,6 +111,12 @@ $stmt->close();
                         <img src="../assets/history.png" alt="">
                         <a href="?page=history">Marketing History</a>
                     </div>  
+
+                    <div class="nav-li">
+                        <img src="../assets/archive.png" alt="">
+                        <a href="?page=archive">Marketing Archive</a>
+                    </div>  
+
                 </ul>
             </div>
 
@@ -133,7 +139,7 @@ $stmt->close();
                         
 
                         $page = $_GET['page'];
-                        $allowed_pages = ['tracking','accounting','shipping','production','monitoring','dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
+                        $allowed_pages = ['archive','tracking','accounting','shipping','production','monitoring','dashboard', 'add_order', 'history', 'track_order', 'marketing', 'tracking']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

@@ -53,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
         $poNumber
     );
 
+    
+
     if ($stmt->execute()) {
         echo "<script>alert('Record updated successfully!');</script>";
         // Refresh the page to see changes
