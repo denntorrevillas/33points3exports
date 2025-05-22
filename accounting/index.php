@@ -52,12 +52,12 @@ $stmt->close();
                     <img src="../assets/user.png" alt="" srcset="">
                     <p id="staffname"><?php echo htmlspecialchars($username); ?></p>
                    <div class="logout-div">
-            <hr>
+                      <hr>
                      <div class="log-out">
                         <img src="../assets/logout.png" alt="" srcset="">
                             <a href="">Log Out</a>
                        </div>
-                  </div>
+                      </div>
                 </div>
             </div>
         </div>

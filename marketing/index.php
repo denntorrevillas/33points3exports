@@ -54,7 +54,7 @@ $stmt->close();
                     <!-- Display username dynamically -->
                     <p id="staffname"><?php echo htmlspecialchars($username); ?></p>  
                    <a href="">
-                     <img src="../assets/logout.png" alt="">
+                     <img src="../assets/logout(1).png" alt="">
                    </a>       
                 </div>
             </div>
