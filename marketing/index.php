@@ -52,7 +52,10 @@ $stmt->close();
                 <div class="user-logout">
                     <img src="../assets/user.png" alt="">
                     <!-- Display username dynamically -->
-                    <p id="staffname"><?php echo htmlspecialchars($username); ?></p>
+                    <p id="staffname"><?php echo htmlspecialchars($username); ?></p>  
+                   <a href="">
+                     <img src="../assets/logout.png" alt="">
+                   </a>       
                 </div>
             </div>
         </div>
@@ -120,13 +123,7 @@ $stmt->close();
                 </ul>
             </div>
 
-            <div class="logout-div">
-                <hr>
-                <div class="log-out">
-                    <img src="../assets/logout.png" alt="">
-                    <a href="../logout.php">Log Out</a>
-                </div>
-            </div>
+           
         </div>
 
         <!-- Content Area -->

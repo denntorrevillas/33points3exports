@@ -51,7 +51,13 @@ $stmt->close();
                 <div class="user-logout">
                     <img src="../assets/user.png" alt="" srcset="">
                     <p id="staffname"><?php echo htmlspecialchars($username); ?></p>
-                   
+                   <div class="logout-div">
+            <hr>
+                     <div class="log-out">
+                        <img src="../assets/logout.png" alt="" srcset="">
+                            <a href="">Log Out</a>
+                       </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -102,13 +108,7 @@ $stmt->close();
                 </ul>
             </div>
 
-            <div class="logout-div">
-            <hr>
-                    <div class="log-out">
-                        <img src="../assets/logout.png" alt="" srcset="">
-                            <a href="">Log Out</a>
-                    </div>
-           </div>
+            
         </div>
 
         <!-- Content Area -->
