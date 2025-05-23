@@ -110,10 +110,10 @@ $stmt->close();
                         <a href="?page=tracking">Track Order</a>
                     </div> 
 
-                    <div class="nav-li">
+                    <!-- <div class="nav-li">
                         <img src="../assets/history.png" alt="">
                         <a href="?page=history">Marketing History</a>
-                    </div>  
+                    </div>   -->
 
                     <div class="nav-li">
                         <img src="../assets/archive.png" alt="">
