@@ -35,13 +35,11 @@ $conn->close();
                         <th>First Name</th>
                         <th>Middle Name</th>
                         <th>Last Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
+                      
                         <th>Department</th>
                         <th>Position</th>
-                        <th>Password</th>
                         <th>Status</th>
-                        <th>Account Created</th>
+                        
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -53,15 +51,15 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['firstname']); ?></td>
                                 <td><?= htmlspecialchars($data['middlename']); ?></td>
                                 <td><?= htmlspecialchars($data['lastname']); ?></td>
-                                <td><?= htmlspecialchars($data['phone']); ?></td>
-                                <td><?= htmlspecialchars($data['email']); ?></td>
+                       
                                 <td><?= htmlspecialchars($data['department']); ?></td>
                                 <td><?= htmlspecialchars($data['position']); ?></td>
-                                <td><?= htmlspecialchars($data['password']); ?></td>
+                          
                                 <td><?= htmlspecialchars($data['status']); ?></td>
-                                <td><?= htmlspecialchars($data['accountCreated']); ?></td>
-                                <td>
-                                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editModal<?= $data['id']; ?>">Edit</button>
+                                 <td style="text-align:center; border-color:transparent;">
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['id']; ?>" style="border: none; background: none; padding: 0; outline: none;">
+                                    <img src="../assets/edit2.png" alt="Edit" />
+                                </button>
                                 </td>
                             </tr>
 
@@ -145,6 +143,23 @@ $conn->close();
             </table>
         </div>
     </div>
+
+    <style>
+    .table-responsive {
+        max-height: auto; /* Adjust height as needed */
+        overflow-y: auto; /* Vertical scrolling */
+        overflow-x: auto; /* Horizontal scrolling */
+    }
+
+    table {
+        table-layout: fixed; /* Ensure consistent column sizes */
+        word-wrap: break-word; /* Prevent long text from overflowing */
+    }
+
+    th, td {
+        white-space: nowrap; /* Prevent wrapping for headers and cells */
+    }
+</style>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

@@ -102,7 +102,7 @@ $stmt->close();
                   
                    <div class="nav-li">
                         <img src="../assets/usergreen (1).png" alt="">
-                        <a href="?page=managerUser">Manage Users</a>
+                        <a href="?page=manageUser">Manage Users</a>
                     </div>  
 
                      <div class="nav-li">
