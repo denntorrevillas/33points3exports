@@ -1,54 +1,59 @@
 <?php
 // Include the database connection
-include '../db.php'; // Assuming the database connection is in db.php
+include '../db.php'; 
 
 // Query to fetch data from the accounting table
 $query = "SELECT * FROM accounting";
 $result = $conn->query($query);
 
-// Check if there are any results
 if ($result) {
     $accountingData = $result->fetch_all(MYSQLI_ASSOC);
 } else {
     $accountingData = [];
-    echo "<script>alert('Error fetching data: " . $conn->error . "');</script>";
+    $errorFetching = "Error fetching data: " . $conn->error;
 }
 
-// Handle the update
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
-    $poNumber = $_POST['poNumber'];
-    $receivedCopy = $_POST['receivedCopy'];
-    $paymentReceived = $_POST['paymentReceived'];
+// Handle update request
+$updateSuccess = false;
+$updateError = "";
 
-    // Update query
-    $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
-    $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
+    $poNumber = $_POST['poNumber'] ?? null;
+    $receivedCopy = $_POST['receivedCopy'] ?? null;
+    $paymentReceived = $_POST['paymentReceived'] ?? null;
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
+    if ($poNumber && $receivedCopy && $paymentReceived) {
+        $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
+
+        if ($stmt->execute()) {
+            $updateSuccess = true;
+        } else {
+            $updateError = "Error updating record: " . $stmt->error;
+        }
+
+        $stmt->close();
     } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        $updateError = "Invalid data received.";
     }
-
-    $stmt->close();
 }
 
-// Close the connection
 $conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Accounting Department</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 </head>
 <body>
     <h2><b>Accounting Department</b></h2>
-    <hr>
+    <hr />
 
     <div class="table-div" style="overflow-x:auto;">
         <table class="table">
@@ -62,7 +67,6 @@ $conn->close();
                     <th>Days Left</th>
                     <th>Lead Time</th>
                     <th>Action</th>
-                    
                 </tr>
             </thead>
             <tbody>
@@ -75,11 +79,12 @@ $conn->close();
                             <td><?= htmlspecialchars($data['dateReceived']); ?></td>
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
-                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                            <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                        <img src="../assets/edit2.png" alt="Edit" />
-                                    </button>
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" 
+                                    style="border: none; background: none; padding: 0; outline: none;">
+                                    <img src="../assets/edit2.png" alt="Edit" />
+                                </button>
                             </td>
                         </tr>
 
@@ -95,7 +100,7 @@ $conn->close();
                                     </div>
                                     <form method="POST" action="">
                                         <div class="modal-body">
-                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
 
                                             <!-- Received Copy Dropdown -->
                                             <div class="form-group">
@@ -128,7 +133,7 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="5">No data found in the Accounting Department.</td>
+                        <td colspan="8">No data found in the Accounting Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -139,6 +144,9 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -154,6 +162,26 @@ $conn->close();
                 });
             });
         });
+
+        <?php if ($updateSuccess): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Update Successful',
+                text: 'Record updated successfully!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                window.location.href = window.location.href;
+            });
+        <?php elseif ($updateError): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: <?= json_encode($updateError); ?>,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
     </script>
 </body>
 </html>

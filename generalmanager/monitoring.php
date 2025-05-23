@@ -46,8 +46,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $stmt2->bind_param("iiss", $newLeadTime, $updatedDaysLeft, $newDeadline, $poNumber);
 
     if ($stmt2->execute()) {
-        echo "<script>alert('Lead Time, Days Left, and Deadline updated successfully!');</script>";
-        echo "<script>window.location.href = window.location.href;</script>"; // Prevent form resubmission
+        echo "
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Lead Time, Days Left, and Deadline updated successfully!',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = window.location.href;
+                }
+            });
+        </script>
+        ";
         exit;
     } else {
         echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
@@ -67,9 +80,10 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monitoring Table</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h2><b>Monitoring</b></h2>
 
         <div class="table-div">
@@ -102,33 +116,33 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
                                 <td style="text-align:center;">
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
+                                    <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#editModal<?= htmlspecialchars($data['poNumber']); ?>">
                                         <img src="../assets/edit2.png" alt="Edit" style="height:20px; width:20px;" />
                                     </button>
                                 </td>
                             </tr>
 
                             <!-- Modal for editing leadTime only -->
-                            <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
+                            <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber']); ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Lead Time</h5>
+                                            <h5 class="modal-title" id="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>">Edit Lead Time</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
+                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
                                                 <div class="form-group">
-                                                    <label for="leadTime<?= $data['poNumber']; ?>">Lead Time (in days)</label>
+                                                    <label for="leadTime<?= htmlspecialchars($data['poNumber']); ?>">Lead Time (in days)</label>
                                                     <input
                                                         type="number"
                                                         name="leadTime"
                                                         class="form-control"
-                                                        id="leadTime<?= $data['poNumber']; ?>"
-                                                        value="<?= $data['leadTime']; ?>"
+                                                        id="leadTime<?= htmlspecialchars($data['poNumber']); ?>"
+                                                        value="<?= htmlspecialchars($data['leadTime']); ?>"
                                                         min="0"
                                                         required
                                                     />

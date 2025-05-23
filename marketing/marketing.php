@@ -19,65 +19,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $endorsedToGMNew = $_POST['endorsedToGM'] ?? 'Not Started';
     $leadTimeNew = isset($_POST['leadTime']) && $_POST['leadTime'] !== '' ? $_POST['leadTime'] : NULL;
 
-   // Fetch old values for comparison
-$fetchOld = $conn->prepare("SELECT receivedOrder, businessAward, endorsedToGM, leadTime FROM marketing WHERE poNumber = ?");
-$fetchOld->bind_param("s", $poNumber);
-$fetchOld->execute();
-$fetchOld->store_result();
+    // Fetch old values for comparison
+    $fetchOld = $conn->prepare("SELECT receivedOrder, businessAward, endorsedToGM, leadTime FROM marketing WHERE poNumber = ?");
+    $fetchOld->bind_param("s", $poNumber);
+    $fetchOld->execute();
+    $fetchOld->store_result();
 
-// Initialize variables
-$receivedOrderOld = $businessAwardOld = $endorsedToGMOld = $leadTimeOld = null;
+    // Initialize variables
+    $receivedOrderOld = $businessAwardOld = $endorsedToGMOld = $leadTimeOld = null;
 
-$fetchOld->bind_result($receivedOrderOld, $businessAwardOld, $endorsedToGMOld, $leadTimeOld);
-$fetchOld->fetch();
-$fetchOld->close();
+    $fetchOld->bind_result($receivedOrderOld, $businessAwardOld, $endorsedToGMOld, $leadTimeOld);
+    $fetchOld->fetch();
+    $fetchOld->close();
 
-// Update marketing table
-$updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
-$stmt = $conn->prepare($updateQuery);
-$stmt->bind_param("sssss", $receivedOrderNew, $businessAwardNew, $endorsedToGMNew, $leadTimeNew, $poNumber);
+    // Update marketing table
+    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->bind_param("sssss", $receivedOrderNew, $businessAwardNew, $endorsedToGMNew, $leadTimeNew, $poNumber);
 
-if ($stmt->execute()) {
-    // Prepare to insert into history table
-    
-   $staff_id = $_SESSION['staff_id'] ?? 'Unknown';
-    $department = 'marketing';
+    if ($stmt->execute()) {
+        // Prepare to insert into history table
+        $staff_id = $_SESSION['staff_id'] ?? 'Unknown';
+        $department = 'marketing';
 
-    $historyInsert = $conn->prepare("INSERT INTO history (poNumber, columnName, oldValue, newValue, actionBy, department) VALUES (?, ?, ?, ?, ?, ?)");
+        $historyInsert = $conn->prepare("INSERT INTO history (poNumber, columnName, oldValue, newValue, actionBy, department) VALUES (?, ?, ?, ?, ?, ?)");
 
-    // Check each changed column and insert into history
-    if ($receivedOrderOld !== $receivedOrderNew) {
-        $columnName = 'receivedOrder';
-        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $receivedOrderOld, $receivedOrderNew, $staff_id, $department);
-        $historyInsert->execute();
+        // Check each changed column and insert into history
+        if ($receivedOrderOld !== $receivedOrderNew) {
+            $columnName = 'receivedOrder';
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $receivedOrderOld, $receivedOrderNew, $staff_id, $department);
+            $historyInsert->execute();
+        }
+        if ($businessAwardOld !== $businessAwardNew) {
+            $columnName = 'businessAward';
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $businessAwardOld, $businessAwardNew, $staff_id, $department);
+            $historyInsert->execute();
+        }
+        if ($endorsedToGMOld !== $endorsedToGMNew) {
+            $columnName = 'endorsedToGM';
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $endorsedToGMOld, $endorsedToGMNew, $staff_id, $department);
+            $historyInsert->execute();
+        }
+        if ((string)$leadTimeOld !== (string)$leadTimeNew) {
+            $columnName = 'leadTime';
+            $oldVal = $leadTimeOld === null ? 'NULL' : $leadTimeOld;
+            $newVal = $leadTimeNew === null ? 'NULL' : $leadTimeNew;
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $oldVal, $newVal, $staff_id, $department);
+            $historyInsert->execute();
+        }
+
+        $historyInsert->close();
+
+        echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Update Successful',
+                text: 'Record updated successfully!',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                
+            });
+        </script>";
+    } else {
+        echo "<script>alert('Error updating record!');</script>";
     }
-    if ($businessAwardOld !== $businessAwardNew) {
-        $columnName = 'businessAward';
-        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $businessAwardOld, $businessAwardNew, $staff_id, $department);
-        $historyInsert->execute();
-    }
-    if ($endorsedToGMOld !== $endorsedToGMNew) {
-        $columnName = 'endorsedToGM';
-        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $endorsedToGMOld, $endorsedToGMNew, $staff_id, $department);
-        $historyInsert->execute();
-    }
-    if ((string)$leadTimeOld !== (string)$leadTimeNew) {
-        $columnName = 'leadTime';
-        $oldVal = $leadTimeOld === null ? 'NULL' : $leadTimeOld;
-        $newVal = $leadTimeNew === null ? 'NULL' : $leadTimeNew;
-        $historyInsert->bind_param("ssssss", $poNumber, $columnName, $oldVal, $newVal, $staff_id, $department);
-        $historyInsert->execute();
-    }
 
-    $historyInsert->close();
-
-    echo "<script>alert('Record updated successfully!');</script>";
-} else {
-    echo "<script>alert('Error updating record!');</script>";
-}
-
-$stmt->close();
-
+    $stmt->close();
 }
 
 $conn->close();
@@ -96,7 +103,7 @@ $conn->close();
     <hr />
 
     <div class="table-div" style="overflow-x:auto;">
-        <table class="table">
+        <table class="table-div-content">
             <thead>
                 <tr>
                     <th>PO No.</th>
@@ -194,6 +201,10 @@ $conn->close();
     </div>
 
     <script>
+    
+
+
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.modal').forEach(modal => {
             const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
@@ -227,5 +238,8 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

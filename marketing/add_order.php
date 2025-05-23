@@ -1,10 +1,105 @@
 <?php
-// Fetch the orders data
-$orders = include 'fetchOrders.php';
+include '../db.php';
 
-// Check if a success message should be displayed
-$successMessage = isset($_GET['success']) && $_GET['success'] === '1';
+$orders = [];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (
+        empty($_POST['poNumber']) || 
+        empty($_POST['leadTime']) || 
+        empty($_POST['buyer'])
+    ) {
+        echo "<script>
+            Swal.fire({
+                title: 'Error!',
+                text: 'All fields are required.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        </script>";
+        exit;
+    }
+
+    $poNumber = $_POST['poNumber'];
+    $buyer = $_POST['buyer'];
+    $leadTime = (int)$_POST['leadTime'];
+
+    $orderDate = date('Y-m-d H:i:s');
+    $shipDate = date('Y-m-d', strtotime("+$leadTime days"));
+    $overallStatus = "Not Started";
+
+    // Check for duplicate PO Number
+    $checkQuery = "SELECT COUNT(*) as count FROM Orders WHERE poNumber = ?";
+    $stmt = $conn->prepare($checkQuery);
+    $stmt->bind_param("s", $poNumber);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($row['count'] > 0) {
+        echo "<script>
+            Swal.fire({
+                title: 'Error!',
+                text: 'PO Number already exists. Please use a unique PO Number.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        </script>";
+    } else {
+        $sql = "INSERT INTO Orders (poNumber, buyer, orderDate, shipDate, leadTime, overallStatus) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt) {
+            $stmt->bind_param("ssssis", $poNumber, $buyer, $orderDate, $shipDate, $leadTime, $overallStatus);
+
+            if ($stmt->execute()) {
+                echo "<script>
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Order added successfully.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = window.location.href;
+                    });
+                </script>";
+            } else {
+                echo "<script>
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to add the order. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
+            }
+
+            $stmt->close();
+        } else {
+            echo "<script>
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Query error: " . $conn->error . "',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            </script>";
+        }
+    }
+}
+
+// Fetch the orders data
+$query = "SELECT * FROM Orders";
+$result = $conn->query($query);
+if ($result) {
+    $orders = $result->fetch_all(MYSQLI_ASSOC);
+}
+$conn->close(); // Close connection only after all database operations
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,7 +108,6 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 </head>
 <body>
     <div class="container">
@@ -32,16 +126,8 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
             </div>
         </div>
 
-        <!-- Success Message -->
-        <?php if ($successMessage): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Order added successfully!
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
         <div class="table-div">
-            <table id="table">
+            <table id="table-div-content">
                 <thead>
                     <tr>
                         <th>PO No.</th>
@@ -86,7 +172,7 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
                 </div>
                 <div class="modal-body">
                     <!-- Add Order Form -->
-                    <form id="addOrderForm" action="sqlAddOrder.php" method="POST">
+                    <form id="addOrderForm" action="" method="POST">
                         <div class="mb-3">
                             <label for="poNumber" class="form-label">PO No.</label>
                             <input type="text" name="poNumber" class="form-control" id="poNumber" placeholder="Enter PO Number" required />
@@ -109,29 +195,8 @@ $successMessage = isset($_GET['success']) && $_GET['success'] === '1';
         </div>
     </div>
 
-   
-    <!-- JavaScript -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Function to change the text color of the "Days Left" column based on the value
-            function updateDaysLeftColor() {
-                const daysLeftCells = document.querySelectorAll("table tbody tr td:nth-child(5)");
-                daysLeftCells.forEach(cell => {
-                    const daysLeft = parseInt(cell.textContent);
-                    if (daysLeft <= 40) {
-                        cell.style.color = "#ff4d4d"; // Red
-                    } else if (daysLeft <= 80) {
-                        cell.style.color = "#ffcc00"; // Yellow
-                    } else {
-                        cell.style.color = "#28a745"; // Green
-                    }
-                });
-            }
-
-            // Call the function initially to color the cells
-            updateDaysLeftColor();
-
-            // Search functionality
             const searchInput = document.getElementById('searchInput');
             const searchButton = document.getElementById('searchButton');
             const rows = document.querySelectorAll('table tbody tr');

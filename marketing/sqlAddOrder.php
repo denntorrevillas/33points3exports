@@ -22,41 +22,71 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $buyer = $_POST['buyer'];
     $leadTime = (int)$_POST['leadTime'];
 
-   $orderDate = date('Y-m-d H:i:s');
+    $orderDate = date('Y-m-d H:i:s');
     $shipDate = date('Y-m-d', strtotime("+$leadTime days"));
     $daysLeft = $leadTime;
     $overallStatus = "Not Started";
 
-    $sql = "INSERT INTO Orders (poNumber, buyer, orderDate, shipDate, daysLeft, leadTime, overallStatus) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // Check for duplicate PO Number
+    $checkQuery = "SELECT COUNT(*) as count FROM Orders WHERE poNumber = ?";
+    $stmt = $conn->prepare($checkQuery);
+    $stmt->bind_param("s", $poNumber);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
 
-    $stmt = $conn->prepare($sql);
-
-    if ($stmt) {
-        $stmt->bind_param("ssssiss", $poNumber, $buyer, $orderDate, $shipDate, $daysLeft, $leadTime, $overallStatus);
-
-        if ($stmt->execute()) {
-           
-             echo "<script>alert('Record updated successfully!');
-           
-             </script>";
-            
-       
-        } else {
-           echo "<script>alert('Record update failed!');</script>";
-         echo "<script>window.location.href = window.location.href;</script>";
-        }
-
-        $stmt->close();
-    } else {
+    if ($row['count'] > 0) {
         echo "<script>
             Swal.fire({
                 title: 'Error!',
-                text: 'Query error: " . $conn->error . "',
+                text: 'PO Number already exists. Please use a unique PO Number.',
                 icon: 'error',
                 confirmButtonText: 'OK'
             });
         </script>";
+    } else {
+        $sql = "INSERT INTO Orders (poNumber, buyer, orderDate, shipDate, daysLeft, leadTime, overallStatus) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if ($stmt) {
+            $stmt->bind_param("ssssiss", $poNumber, $buyer, $orderDate, $shipDate, $daysLeft, $leadTime, $overallStatus);
+
+            if ($stmt->execute()) {
+                echo "<script>
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Order added successfully.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = window.location.href;
+                    });
+                </script>";
+            } else {
+                echo "<script>
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to add the order. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                </script>";
+            }
+
+            $stmt->close();
+        } else {
+            echo "<script>
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Query error: " . $conn->error . "',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            </script>";
+        }
     }
 
     $conn->close();

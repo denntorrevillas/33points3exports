@@ -15,7 +15,9 @@ if ($result->num_rows > 0) {
         if (is_null($data['leadTime']) && !is_null($data['dateReceived']) && !is_null($data['deadline'])) {
             $dateReceived = new DateTime($data['dateReceived']);
             $deadline = new DateTime($data['deadline']);
-            $leadTime = $deadline->diff($dateReceived)->days;
+            $interval = $deadline->diff($dateReceived);
+            // If deadline is earlier than dateReceived, leadTime is negative
+            $leadTime = $interval->invert ? -$interval->days : $interval->days;
             $data['leadTime'] = $leadTime;
 
             // Update the database with the calculated leadTime
@@ -59,15 +61,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
         );
 
         if ($stmt->execute()) {
-            echo "<script>alert('Record updated successfully!');</script>";
-            echo "<script>window.location.href = window.location.href;</script>";
+            echo "
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Record updated successfully!',
+                    confirmButtonColor: '#3085d6'
+                }).then(() => {
+                    window.location.href = window.location.href;
+                });
+            </script>";
         } else {
-            echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+            $error = $stmt->error;
+            echo "
+            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error updating record: " . addslashes($error) . "',
+                    confirmButtonColor: '#d33'
+                });
+            </script>";
         }
 
         $stmt->close();
     } else {
-        echo "<script>alert('All fields are required!');</script>";
+        echo "
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Warning',
+                text: 'All fields are required!',
+                confirmButtonColor: '#f0ad4e'
+            });
+        </script>";
     }
 }
 
@@ -82,13 +113,15 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monitoring Table</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <!-- SweetAlert2 CSS (optional for styling) -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h2><b>Monitoring</b></h2>
         <hr />
 
-        <div class="table-div">
+        <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
@@ -118,8 +151,8 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['daysLeft'] ?? ''); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime'] ?? ''); ?></td>
                                 <td>
-                                    <button data-toggle="modal" data-target="#editModal<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                        <img src="../assets/edit2.png" alt="Edit" />
+                                    <button data-toggle="modal" data-target="#editModal<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" class="btn btn-link p-0" title="Edit">
+                                        <img src="../assets/edit2.png" alt="Edit" style="width: 20px;" />
                                     </button>
                                 </td>
                             </tr>
@@ -141,7 +174,7 @@ $conn->close();
                                                 <!-- Dropdown fields -->
                                                 <div class="form-group">
                                                     <label>Supplier Evaluated</label>
-                                                    <select name="supplierEvaluated" class="form-control">
+                                                    <select name="supplierEvaluated" class="form-control" required>
                                                         <option value="Not Started" <?= ($data['supplierEvaluated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                         <option value="In Progress" <?= ($data['supplierEvaluated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Completed" <?= ($data['supplierEvaluated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -149,7 +182,7 @@ $conn->close();
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Supplier PO Created</label>
-                                                    <select name="supplierPOCreated" class="form-control">
+                                                    <select name="supplierPOCreated" class="form-control" required>
                                                         <option value="Not Started" <?= ($data['supplierPOCreated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                         <option value="In Progress" <?= ($data['supplierPOCreated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Completed" <?= ($data['supplierPOCreated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -157,7 +190,7 @@ $conn->close();
                                                 </div>
                                                 <div class="form-group">
                                                     <label>GM Approved</label>
-                                                    <select name="gmApproved" class="form-control">
+                                                    <select name="gmApproved" class="form-control" required>
                                                         <option value="Not Started" <?= ($data['gmApproved'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                         <option value="In Progress" <?= ($data['gmApproved'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Completed" <?= ($data['gmApproved'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -165,7 +198,7 @@ $conn->close();
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Supplier PO Issued</label>
-                                                    <select name="supplierPOIssued" class="form-control">
+                                                    <select name="supplierPOIssued" class="form-control" required>
                                                         <option value="Not Started" <?= ($data['supplierPOIssued'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                         <option value="In Progress" <?= ($data['supplierPOIssued'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                         <option value="Completed" <?= ($data['supplierPOIssued'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -183,7 +216,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="10">No data found in the Monitoring Table.</td>
+                            <td colspan="10" class="text-center">No data found in the Monitoring Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -191,7 +224,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Include Bootstrap JS -->
+    <!-- Include Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

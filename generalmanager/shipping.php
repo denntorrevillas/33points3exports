@@ -41,8 +41,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('Lead Time updated successfully!');</script>";
-        echo "<script>window.location.href = window.location.href;</script>";
+        echo "
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Lead Time updated successfully!',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = window.location.href;
+            });
+        </script>";
     } else {
         echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
     }
@@ -122,9 +132,6 @@ $conn->close();
                                                     <label>Lead Time (Days)</label>
                                                     <input type="number" name="leadTime" value="<?= htmlspecialchars($data['leadTime']); ?>" class="form-control" min="0" required />
                                                 </div>
-
-                                                <!-- Display calculated Deadline and Days Left -->
-                                             
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

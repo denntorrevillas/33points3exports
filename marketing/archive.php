@@ -56,6 +56,13 @@ $conn->close();
             <?php endif; ?>
         </tbody>
     </table>
+
+    <script>
+
+
+
+   
+    </script>
 </div>
 </body>
 </html>

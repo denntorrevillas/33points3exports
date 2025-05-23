@@ -18,22 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
     $newLeadTime = intval($_POST['leadTime']); // Get updated lead time
 
-    // Fetch the current dateReceived and daysLeft for the specified PO Number
-    $query = "SELECT dateReceived, daysLeft FROM production WHERE poNumber = ?";
+    // Fetch the current dateReceived for the specified PO Number
+    $query = "SELECT dateReceived FROM production WHERE poNumber = ?";
     $stmt1 = $conn->prepare($query);
     $stmt1->bind_param("s", $poNumber);
     $stmt1->execute();
-    $stmt1->bind_result($dateReceived, $currentDaysLeft);
+    $stmt1->bind_result($dateReceived);
     $stmt1->fetch();
     $stmt1->close();
 
-    // Recalculate the deadline and daysLeft
-    $updatedDaysLeft = intval($currentDaysLeft) + $newLeadTime; // Add new lead time
+    // Calculate new deadline = dateReceived + leadTime days
     $deadlineDate = new DateTime($dateReceived);
-    $deadlineDate->modify("+$updatedDaysLeft days");
+    $deadlineDate->modify("+$newLeadTime days");
     $newDeadline = $deadlineDate->format('Y-m-d');
 
-    // Update the database
+    // Calculate daysLeft as difference between deadline and today (in days)
+    $today = new DateTime();
+    $deadlineDT = new DateTime($newDeadline);
+    $diff = $today->diff($deadlineDT);
+    $daysLeft = (int)$diff->format("%r%a"); // can be negative if past deadline
+
+    if ($daysLeft < 0) {
+        $daysLeft = 0; // no negative days left, clamp to 0
+    }
+
+    // Update the database: leadTime, daysLeft, deadline
     $updateQuery = "
         UPDATE production 
         SET leadTime = ?, 
@@ -41,11 +50,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             deadline = ? 
         WHERE poNumber = ?";
     $stmt2 = $conn->prepare($updateQuery);
-    $stmt2->bind_param("iiss", $newLeadTime, $updatedDaysLeft, $newDeadline, $poNumber);
+    $stmt2->bind_param("iiss", $newLeadTime, $daysLeft, $newDeadline, $poNumber);
 
     if ($stmt2->execute()) {
-        echo "<script>alert('Lead Time, Days Left, and Deadline updated successfully!');</script>";
-        echo "<script>window.location.href = window.location.href;</script>"; // Prevent form resubmission
+        echo "
+        <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Lead Time, Days Left, and Deadline updated successfully!',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = window.location.href;
+                }
+            });
+        </script>
+        ";
         exit;
     } else {
         echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
@@ -61,15 +83,16 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Production Table</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h2><b>Production Table</b></h2>
-        <hr>
+        <hr />
 
         <div class="table-div" style="overflow-x:auto;">
             <table class="table table-bordered table-striped">
@@ -98,36 +121,35 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                                <td style="text-align:center;">
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                        <img src="../assets/edit2.png" alt="Edit" style="height:20px; width:20px;">
-                                    </button>
+                                   <td style="text-align:center; border-color:transparent;">
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
+                                    <img src="../assets/edit2.png" alt="Edit" />
+                                </button>
                                 </td>
                             </tr>
 
                             <!-- Modal for editing leadTime -->
-                            <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
+                            <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber']); ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Lead Time</h5>
+                                            <h5 class="modal-title" id="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>">Edit Lead Time</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
+                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
 
-                                                <!-- Lead Time -->
                                                 <div class="form-group">
-                                                    <label for="leadTime<?= $data['poNumber']; ?>">Lead Time (Days)</label>
+                                                    <label for="leadTime<?= htmlspecialchars($data['poNumber']); ?>">Lead Time (Days)</label>
                                                     <input
                                                         type="number"
                                                         name="leadTime"
                                                         class="form-control"
-                                                        id="leadTime<?= $data['poNumber']; ?>"
-                                                        value="<?= $data['leadTime']; ?>"
+                                                        id="leadTime<?= htmlspecialchars($data['poNumber']); ?>"
+                                                        value="<?= htmlspecialchars($data['leadTime']); ?>"
                                                         min="0"
                                                         required
                                                     />
@@ -152,7 +174,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Include Bootstrap JS -->
+    <!-- Include Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

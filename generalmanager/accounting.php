@@ -15,35 +15,42 @@ if ($result) {
 }
 
 // Handle the update
+// Handle the update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
     $newLeadTime = intval($_POST['leadTime']);
 
-    // Get current daysLeft and deadline for this poNumber
-    $daysDeadlineQuery = "SELECT daysLeft, deadline FROM accounting WHERE poNumber = ?";
-    $stmt1 = $conn->prepare($daysDeadlineQuery);
+    // Get current deadline only (daysLeft won't be updated)
+    $deadlineQuery = "SELECT deadline FROM accounting WHERE poNumber = ?";
+    $stmt1 = $conn->prepare($deadlineQuery);
     $stmt1->bind_param("s", $poNumber);
     $stmt1->execute();
-    $stmt1->bind_result($currentDaysLeft, $currentDeadline);
+    $stmt1->bind_result($currentDeadline);
     $stmt1->fetch();
     $stmt1->close();
 
-    // Update daysLeft by adding the new leadTime input
-    $updatedDaysLeft = intval($currentDaysLeft) + $newLeadTime;
-
-    // Calculate new deadline by adding updatedDaysLeft days to current date (or current deadline)
+    // Calculate new deadline by adding newLeadTime days to current deadline
     $deadlineDate = new DateTime($currentDeadline);
-    $deadlineDate->modify("+$updatedDaysLeft days");
+    $deadlineDate->modify("+$newLeadTime days");
     $newDeadline = $deadlineDate->format('Y-m-d');
 
-    // Update query with new leadTime (input only), updated daysLeft, and new deadline
-    $updateQuery = "UPDATE accounting SET leadTime = ?, daysLeft = ?, deadline = ? WHERE poNumber = ?";
+    // Update leadTime and deadline only (no daysLeft)
+    $updateQuery = "UPDATE accounting SET leadTime = ?, deadline = ? WHERE poNumber = ?";
     $stmt2 = $conn->prepare($updateQuery);
-    $stmt2->bind_param("iiss", $newLeadTime, $updatedDaysLeft, $newDeadline, $poNumber);
+    $stmt2->bind_param("iss", $newLeadTime, $newDeadline, $poNumber);
 
     if ($stmt2->execute()) {
-        echo "<script>alert('Lead Time, Days Left, and Deadline updated successfully!');</script>";
-        echo "<script>window.location.href='';</script>"; // prevent form resubmission
+        echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+        echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Lead Time and Deadline updated successfully!',
+                showConfirmButton: true
+            }).then(() => {
+                window.location.href = '';
+            });
+        </script>";
         exit;
     } else {
         echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
@@ -51,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     $stmt2->close();
 }
+
 
 // Close the connection
 $conn->close();
@@ -142,5 +150,6 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
 </body>
 </html>

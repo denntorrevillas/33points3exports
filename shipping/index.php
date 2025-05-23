@@ -100,6 +100,10 @@ $stmt->close();
                         <a href="?page=tracking">Track Order</a>
                     </div> 
 
+                     <div class="nav-li">
+                        <img src="../assets/archive.png" alt="">
+                        <a href="?page=archive">Shipping History</a>
+                    </div> 
                 </ul>
             </div>
 
@@ -123,7 +127,7 @@ $stmt->close();
                     // Determine which page to include
                     if (isset($_GET['page'])) {
                         $page = $_GET['page'];
-                        $allowed_pages = ['tracking','production','marketing','dashboard', 'accounting', 'monitoring','shipping']; // Whitelist pages
+                        $allowed_pages = ['archive','tracking','production','marketing','dashboard', 'accounting', 'monitoring','shipping']; // Whitelist pages
 
                         if (in_array($page, $allowed_pages)) {
                             include "$page.php";

@@ -13,6 +13,10 @@ if ($result->num_rows > 0) {
     $shippingData = [];
 }
 
+// Initialize update result variables
+$updateSuccess = false;
+$updateError = '';
+
 // Handle the update functionality
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
@@ -20,18 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $loading = $_POST['loading'];
     $transported = $_POST['transported'];
     $delivered_to_customer = $_POST['delivered_to_customer'];
-    $daysLeft = $_POST['daysLeft'];
 
-    // Calculate the deadline based on the daysLeft value
-    $dateReceivedQuery = "SELECT dateReceived FROM shipping WHERE poNumber = ?";
-    $stmt = $conn->prepare($dateReceivedQuery);
+    // Fetch existing daysLeft and dateReceived for this PO number
+    $daysLeftQuery = "SELECT daysLeft, dateReceived FROM shipping WHERE poNumber = ?";
+    $stmt = $conn->prepare($daysLeftQuery);
     $stmt->bind_param("s", $poNumber);
     $stmt->execute();
-    $stmt->bind_result($dateReceived);
+    $stmt->bind_result($daysLeft, $dateReceived);
     $stmt->fetch();
     $stmt->close();
 
-    // Calculate deadline
+    // Calculate deadline based on fetched daysLeft
     $deadline = date('Y-m-d', strtotime("$dateReceived +$daysLeft days"));
 
     // Update query
@@ -41,28 +44,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             loading = ?, 
             transported = ?, 
             delivered_to_customer = ?, 
-            daysLeft = ?, 
             deadline = ? 
         WHERE poNumber = ?";
         
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssiss", 
+        "ssssss", 
         $pre_loading, 
         $loading, 
         $transported, 
         $delivered_to_customer, 
-        $daysLeft, 
         $deadline, 
         $poNumber
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('Record updated successfully!');</script>";
-        // Refresh the page to see changes
-        echo "<script>window.location.href = window.location.href;</script>";
+        $updateSuccess = true;
     } else {
-        echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+        $updateError = $stmt->error;
     }
 
     $stmt->close();
@@ -75,13 +74,15 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Shipping Table</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container ">
+    <div class="container">
         <h2><b>Shipping Table</b></h2>
         <hr>
 
@@ -114,11 +115,11 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                               <td style="text-align: center;">
-                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                    <img src="../assets/edit2.png" alt="Edit" />
-                                </button>
-                            </td>
+                                <td style="text-align: center;">
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
+                                        <img src="../assets/edit2.png" alt="Edit" />
+                                    </button>
+                                </td>
                             </tr>
 
                             <!-- Modal for editing each row -->
@@ -168,7 +169,6 @@ $conn->close();
                                                         <option <?= $data['delivered_to_customer'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
                                                     </select>
                                                 </div>
-                                               
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -182,7 +182,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="9">No data found in the Shipping Table.</td>
+                            <td colspan="10">No data found in the Shipping Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -194,5 +194,26 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <?php if ($updateSuccess): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Record updated successfully!',
+            showConfirmButton: false,
+            timer: 1500
+        }).then(() => {
+            window.location.href = window.location.href;
+        });
+    </script>
+    <?php elseif ($updateError != ''): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error updating record',
+            text: '<?php echo addslashes($updateError); ?>'
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>
