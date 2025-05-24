@@ -1,5 +1,5 @@
 <?php
-// session_start();
+
 include '../db.php'; // Assuming the database connection is in db.php
 
 // Query to fetch data from the marketing table
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     if ($stmt->execute()) {
         // Prepare to insert into history table
-        $staff_id = $_SESSION['staff_id'] ?? 'Unknown';
+        $staff_id = $_SESSION['staff_ID'] ?? 'Unknown';
         $department = 'marketing';
 
         $historyInsert = $conn->prepare("INSERT INTO history (poNumber, columnName, oldValue, newValue, actionBy, department) VALUES (?, ?, ?, ?, ?, ?)");
@@ -102,9 +102,9 @@ $conn->close();
     <h2><b>Marketing Department</b></h2>
     <hr />
 
-    <div class="table-div" style="overflow-x:auto;">
-        <table class="table-div-content">
-            <thead>
+    <div class="table-div" >
+        <table class="table">
+        
                 <tr>
                     <th>PO No.</th>
                     <th>Received Order</th>
@@ -116,7 +116,7 @@ $conn->close();
                     <th>Lead Time</th>
                     <th>Action</th>
                 </tr>
-            </thead>
+           
             <tbody>
                 <?php if (!empty($marketingData)) : ?>
                     <?php foreach ($marketingData as $data) : ?>
@@ -130,7 +130,7 @@ $conn->close();
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
-                               <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
+                               <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;;">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
@@ -201,6 +201,38 @@ $conn->close();
     </div>
 
     <script>
+
+          document.addEventListener("DOMContentLoaded", () => {
+  const targetColumns = [6]; // Columns 5 and 6 (0-based indices)
+  const rows = document.querySelectorAll("table tr");
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+
+    targetColumns.forEach(columnIndex => {
+      if (cells[columnIndex]) {
+        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
+
+        if (value > 10) {
+          cells[columnIndex].style.backgroundColor = "green";
+        cells[columnIndex].style.color = "white"; // Change text color to white
+        } else if (value >= 4 && value >=9) {
+          cells[columnIndex].style.backgroundColor = "orange";
+           cells[columnIndex].style.color = "white";
+        } else if (value >= 2 && value <= 3) {
+          cells[columnIndex].style.backgroundColor = "yellow";
+           cells[columnIndex].style.color = "white";
+        } else if (value <= 1) {
+          cells[columnIndex].style.backgroundColor = "red";
+           cells[columnIndex].style.color = "white";
+        }
+      }
+    });
+  });
+});
+
+
+
     
 
 

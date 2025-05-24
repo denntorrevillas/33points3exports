@@ -83,8 +83,9 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Monitoring</b></h2>
+        <hr>
 
         <div class="table-div">
             <table class="table table-bordered table-striped">

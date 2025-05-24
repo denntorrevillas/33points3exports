@@ -90,7 +90,7 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2><b>Production Table</b></h2>
         <hr />
 

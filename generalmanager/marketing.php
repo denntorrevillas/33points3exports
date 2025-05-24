@@ -86,7 +86,7 @@ $conn->close();
     <?php endif; ?>
 
     <div class="container">
-        <h2 class="mt-4"><b>Marketing Department</b></h2>
+        <h2 ><b>Marketing Department</b></h2>
         <hr>
 
         <div class="table-responsive">

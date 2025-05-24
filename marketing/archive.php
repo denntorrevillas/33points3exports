@@ -24,9 +24,10 @@ $conn->close();
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-<div class="container mt-4">
-    <h2>Marketing History Table</h2>
-    <table class="table table-bordered table-striped">
+<div class="container">
+    <h2><b>Marketing History Table</b></h2>
+    <hr>
+    <table class="table">
         <thead>
             <tr>
                 <th>PO Number</th>

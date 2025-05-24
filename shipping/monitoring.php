@@ -89,8 +89,8 @@ $conn->close();
         <hr>
 
         <div class="table-div">
-            <table class="table table-bordered table-striped">
-                <thead>
+            <table class="table" >
+                
                     <tr>
                         <th>PO No.</th>
                         <th>Supplier Evaluated</th>
@@ -103,7 +103,7 @@ $conn->close();
                         <th>Lead Time</th>
                     
                     </tr>
-                </thead>
+             
                 <tbody>
                     <?php if (!empty($monitoringData)) : ?>
                         <?php foreach ($monitoringData as $data) : ?>

@@ -14,7 +14,7 @@ include '../db.php';
 
 // Retrieve staff details from the database
 $staff_id = $_SESSION['staff_id'];
-$sql = "SELECT CONCAT(firstname, ' ', middlename, ' ', lastname) AS username FROM staff WHERE id = ?";
+$sql = "SELECT CONCAT(firstname, ' ', middlename, ' ', lastname) AS username FROM staff WHERE staff_ID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('i', $staff_id);
 $stmt->execute();
@@ -36,7 +36,8 @@ $stmt->close();
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
-    <link rel="stylesheet" href="../styles/style.css?v=1.0">
+   <link rel="stylesheet" href="../styles/style.css?v=<?php echo time(); ?>">
+
     
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>

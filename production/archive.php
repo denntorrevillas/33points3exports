@@ -9,7 +9,7 @@
     <div class="container">
        <h2><b>Production History</b></h2>
        <hr>
-        <table class="table table-striped table-bordered">
+        <table class="table">
             <thead class="table-dark">
                 <tr>
                     <th>PO Number</th>

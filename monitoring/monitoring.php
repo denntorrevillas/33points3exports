@@ -117,12 +117,12 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container ">
         <h2><b>Monitoring</b></h2>
         <hr />
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+        <div class="table-div">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>PO No.</th>
@@ -223,6 +223,42 @@ $conn->close();
             </table>
         </div>
     </div>
+
+    <script>
+
+   document.addEventListener("DOMContentLoaded", () => {
+    const targetColumnIndex = 7; // 0-based index of the "Days Left" column (adjust as needed)
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        const targetCell = cells[targetColumnIndex];
+
+        if (targetCell) {
+            const value = parseInt(targetCell.textContent, 10); // Convert cell content to an integer
+
+            if (!isNaN(value)) {
+                if (value > 10) {
+                    targetCell.style.backgroundColor = "green";
+                    targetCell.style.color = "white";
+                } else if (value >= 4 && value <= 9) {
+                    targetCell.style.backgroundColor = "orange";
+                    targetCell.style.color = "white";
+                } else if (value >= 2 && value <= 3) {
+                    targetCell.style.backgroundColor = "yellow";
+                    targetCell.style.color = "black"; // Yellow background works better with black text
+                } else if (value <= 1) {
+                    targetCell.style.backgroundColor = "red";
+                    targetCell.style.color = "white";
+                }
+            }
+        }
+    });
+});
+
+
+
+    </script>
 
     <!-- Include Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>

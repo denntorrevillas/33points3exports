@@ -1,33 +1,91 @@
-
 <?php
-// Start session
+// Start the session
 session_start();
 
-// Check if the user is logged in
-if (!isset($_SESSION['staff_id'])) {
-    header('Location: index.php'); // Redirect to login if not logged in
-    exit;
+// Include the database connection
+include 'db.php';
+
+// Initialize alert script
+$alertScript = '';
+
+// Handle login logic
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Sanitize input
+    $email = $conn->real_escape_string($_POST['email']);
+    $password = $conn->real_escape_string($_POST['password']);
+
+    // Check if user exists in the database
+    $sql = "SELECT * FROM staff WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        die("Database error: " . $conn->error); // Debug database connection issue
+    }
+
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+
+        // Debug: Check database query results
+        // echo "<pre>"; print_r($row); exit;
+
+        // Verify password
+        if (password_verify($password, $row['password'])) {
+            // Store staff ID in session
+            $_SESSION['staff_ID'] = $row['staff_ID'];
+
+            // Redirect based on department
+            $department = $row['department'];
+            switch ($department) {
+                case 'Marketing':
+                    header('Location: marketing/');
+                    exit;
+                case 'Accounting':
+                    header('Location: accounting/');
+                    exit;
+                case 'Monitoring':
+                    header('Location: monitoring/');
+                    exit;
+                case 'Production':
+                    header('Location: production/');
+                    exit;
+                case 'Shipping':
+                    header('Location: shipping/');
+                    exit;
+                default:
+                    // Debug unexpected department
+                    die("Unexpected department: $department");
+            }
+        } else {
+            // Invalid password
+            $alertScript = "
+            <script>
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Invalid email or password.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            </script>";
+        }
+    } else {
+        // User not found
+        $alertScript = "
+        <script>
+            Swal.fire({
+                title: 'Error!',
+                text: 'No account found with this email.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        </script>";
+    }
+    $stmt->close();
 }
-
-// Include database connection
-include '../db.php';
-
-// Retrieve staff details from the database
-$staff_id = $_SESSION['staff_id'];
-$sql = "SELECT CONCAT(firstname, ' ', middlename, ' ', lastname) AS username FROM staff WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $staff_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $username = $row['username'];
-} else {
-    $username = "Unknown User"; // Fallback if user details are not found
-}
-$stmt->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +94,8 @@ $stmt->close();
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
-    <link rel="stylesheet" href="../styles/style.css?v=1.0">
+  <link rel="stylesheet" href="../styles/style.css?v=<?php echo time(); ?>">
+
     
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>

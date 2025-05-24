@@ -127,7 +127,7 @@ $conn->close(); // Close connection only after all database operations
         </div>
 
         <div class="table-div">
-            <table id="table-div-content">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>PO No.</th>
@@ -137,6 +137,7 @@ $conn->close(); // Close connection only after all database operations
                         <th>Days Left</th>
                         <th>Lead Time</th>
                         <th>Overall Status</th>
+                      
                     </tr>
                 </thead>
                 <tbody>
@@ -150,6 +151,8 @@ $conn->close(); // Close connection only after all database operations
                                 <td><?= htmlspecialchars($order['daysLeft']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['leadTime']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['overallStatus']); ?></td>
+                              
+
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
@@ -212,6 +215,37 @@ $conn->close(); // Close connection only after all database operations
             searchInput.addEventListener('input', filterTable);
             searchButton.addEventListener('click', filterTable);
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+  const targetColumns = [4]; // Columns 5 and 6 (0-based indices)
+  const rows = document.querySelectorAll("table tr");
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+
+    targetColumns.forEach(columnIndex => {
+      if (cells[columnIndex]) {
+        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
+
+        if (value > 10) {
+          cells[columnIndex].style.backgroundColor = "green";
+        cells[columnIndex].style.color = "white"; // Change text color to white
+        } else if (value >= 4 && value >=9) {
+          cells[columnIndex].style.backgroundColor = "orange";
+           cells[columnIndex].style.color = "white";
+        } else if (value >= 2 && value <= 3) {
+          cells[columnIndex].style.backgroundColor = "yellow";
+           cells[columnIndex].style.color = "white";
+        } else if (value <= 1) {
+          cells[columnIndex].style.backgroundColor = "red";
+           cells[columnIndex].style.color = "white";
+        }
+      }
+    });
+  });
+});
+
+
     </script>
 </body>
 </html>

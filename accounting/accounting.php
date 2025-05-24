@@ -149,6 +149,37 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+
+                      document.addEventListener("DOMContentLoaded", () => {
+  const targetColumns = [5]; // Columns 5 and 6 (0-based indices)
+  const rows = document.querySelectorAll("table tr");
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+
+    targetColumns.forEach(columnIndex => {
+      if (cells[columnIndex]) {
+        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
+
+        if (value > 10) {
+          cells[columnIndex].style.backgroundColor = "green";
+        cells[columnIndex].style.color = "white"; // Change text color to white
+        } else if (value >= 4 && value >=9) {
+          cells[columnIndex].style.backgroundColor = "orange";
+           cells[columnIndex].style.color = "white";
+        } else if (value >= 2 && value <= 3) {
+          cells[columnIndex].style.backgroundColor = "yellow";
+           cells[columnIndex].style.color = "white";
+        } else if (value <= 1) {
+          cells[columnIndex].style.backgroundColor = "red";
+           cells[columnIndex].style.color = "white";
+        }
+      }
+    });
+  });
+});
+
+
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.modal').forEach(modal => {
                 const receivedCopyDropdown = modal.querySelector('[name="receivedCopy"]');

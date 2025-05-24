@@ -7,18 +7,14 @@ $query = "SELECT * FROM shipping";
 $result = $conn->query($query);
 
 // Check if there are any results
-if ($result->num_rows > 0) {
-    $shippingData = $result->fetch_all(MYSQLI_ASSOC);
-} else {
-    $shippingData = [];
-}
+$shippingData = $result->num_rows > 0 ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
 // Initialize update result variables
 $updateSuccess = false;
 $updateError = '';
 
 // Handle the update functionality
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
     $pre_loading = $_POST['pre_loading'];
     $loading = $_POST['loading'];
@@ -46,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             delivered_to_customer = ?, 
             deadline = ? 
         WHERE poNumber = ?";
-        
+
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
         "ssssss", 
@@ -74,11 +70,10 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shipping Table</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
-    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -87,8 +82,8 @@ $conn->close();
         <hr>
 
         <div class="table-div" style="overflow-x:auto;">
-            <table class="table table-bordered table-striped">
-                <thead>
+            <table class="table">
+               
                     <tr>
                         <th>PO No.</th>
                         <th>Pre-loading</th>
@@ -101,7 +96,7 @@ $conn->close();
                         <th>Lead Time</th>
                         <th>Action</th>
                     </tr>
-                </thead>
+               
                 <tbody>
                     <?php if (!empty($shippingData)) : ?>
                         <?php foreach ($shippingData as $data) : ?>
@@ -116,8 +111,8 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
                                 <td style="text-align: center;">
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
-                                        <img src="../assets/edit2.png" alt="Edit" />
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none;">
+                                        <img src="../assets/edit2.png" alt="Edit">
                                     </button>
                                 </td>
                             </tr>
@@ -136,7 +131,6 @@ $conn->close();
                                             <div class="modal-body">
                                                 <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>">
 
-                                                <!-- Fields for updating -->
                                                 <div class="form-group">
                                                     <label>Pre-loading</label>
                                                     <select name="pre_loading" class="form-control">
@@ -190,13 +184,43 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Include Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
-    <?php if ($updateSuccess): ?>
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const targetColumns = [7]; // Target column index for Days Left
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+
+                targetColumns.forEach(columnIndex => {
+                    if (cells[columnIndex]) {
+                        const value = parseInt(cells[columnIndex].textContent.trim(), 10);
+
+                        if (!isNaN(value)) {
+                            if (value > 10) {
+                                cells[columnIndex].style.backgroundColor = "green";
+                                cells[columnIndex].style.color = "white";
+                            } else if (value >= 4 && value <= 9) {
+                                cells[columnIndex].style.backgroundColor = "orange";
+                                cells[columnIndex].style.color = "white";
+                            } else if (value >= 2 && value <= 3) {
+                                cells[columnIndex].style.backgroundColor = "yellow";
+                                cells[columnIndex].style.color = "black";
+                            } else if (value <= 1) {
+                                cells[columnIndex].style.backgroundColor = "red";
+                                cells[columnIndex].style.color = "white";
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        <?php if ($updateSuccess): ?>
         Swal.fire({
             icon: 'success',
             title: 'Record updated successfully!',
@@ -205,15 +229,13 @@ $conn->close();
         }).then(() => {
             window.location.href = window.location.href;
         });
-    </script>
-    <?php elseif ($updateError != ''): ?>
-    <script>
+        <?php elseif ($updateError != ''): ?>
         Swal.fire({
             icon: 'error',
             title: 'Error updating record',
-            text: '<?php echo addslashes($updateError); ?>'
+            text: '<?= addslashes($updateError); ?>'
         });
+        <?php endif; ?>
     </script>
-    <?php endif; ?>
 </body>
 </html>

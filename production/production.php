@@ -54,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     );
 
     if ($stmt->execute()) {
-        // Send a JS alert using SweetAlert2 later in HTML (we set a session or flag)
         $success = true;
     } else {
         $error = $stmt->error;
@@ -81,7 +80,7 @@ $conn->close();
     <h2><b>Production Table</b></h2>
     <hr />
     <div class="table-div" style="overflow-x:auto;">
-        <table class="table table-bordered table-striped">
+        <table class="table">
             <thead>
                 <tr>
                     <th>PO No.</th>
@@ -97,23 +96,7 @@ $conn->close();
             </thead>
             <tbody>
                 <?php if (!empty($productionData)) : ?>
-                    <?php 
-                    // We'll check statuses to disable next edit buttons
-                    $previousCompleted = true; // initial: allow first edit
-                    foreach ($productionData as $index => $data) : 
-                        // Disable edit button if previous not completed
-                        $disableEdit = !$previousCompleted ? 'disabled' : '';
-
-                        // Check if current row is all completed for next check
-                        $currentCompleted = (
-                            $data['finishing'] === 'Completed' &&
-                            $data['packed'] === 'Completed' &&
-                            $data['inspected'] === 'Completed'
-                        );
-
-                        // For next iteration:
-                        $previousCompleted = $currentCompleted;
-                    ?>
+                    <?php foreach ($productionData as $data) : ?>
                         <tr>
                             <td><?= htmlspecialchars($data['poNumber']); ?></td>
                             <td><?= htmlspecialchars($data['finishing']); ?></td>
@@ -128,10 +111,8 @@ $conn->close();
                                     data-toggle="modal" 
                                     data-target="#editModal<?= $data['poNumber']; ?>" 
                                     style="border:none; background:none; padding:0; outline:none;"
-                                    <?= $disableEdit; ?>
-                                    title="<?= $disableEdit ? 'Complete previous steps first' : 'Edit record'; ?>"
                                 >
-                                    <img src="../assets/edit2.png" alt="Edit" style="<?= $disableEdit ? 'opacity: 0.4; cursor: not-allowed;' : ''; ?>" />
+                                    <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
                         </tr>
@@ -149,7 +130,6 @@ $conn->close();
                                     <form method="POST">
                                         <div class="modal-body">
                                             <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
-
                                             <div class="form-group">
                                                 <label>Finishing</label>
                                                 <select name="finishing" class="form-control" required>
@@ -204,24 +184,6 @@ $conn->close();
                                 </div>
                             </div>
                         </div>
-
-                        <script>
-                            // Calculate and update the deadline when daysLeft changes
-                            document.getElementById('daysLeft<?= $data['poNumber']; ?>').addEventListener('input', function() {
-                                var daysLeft = parseInt(this.value);
-                                var dateReceived = '<?= $data['dateReceived']; ?>';
-
-                                if (!isNaN(daysLeft)) {
-                                    var deadlineDate = new Date(dateReceived);
-                                    deadlineDate.setDate(deadlineDate.getDate() + daysLeft);
-
-                                    var deadline = deadlineDate.toISOString().split('T')[0];
-
-                                    document.getElementById('deadline<?= $data['poNumber']; ?>').value = deadline;
-                                }
-                            });
-                        </script>
-
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
@@ -247,7 +209,6 @@ $conn->close();
         timer: 2000,
         showConfirmButton: false
     }).then(() => {
-        // Reload the page after alert closes
         window.location.href = window.location.href;
     });
 </script>
@@ -261,5 +222,37 @@ $conn->close();
 </script>
 <?php endif; ?>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const targetColumns = [6]; // Target column index for Days Left
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+
+        targetColumns.forEach(columnIndex => {
+            if (cells[columnIndex]) {
+                const value = parseInt(cells[columnIndex].textContent.trim(), 10);
+
+                if (!isNaN(value)) {
+                    if (value > 10) {
+                        cells[columnIndex].style.backgroundColor = "green";
+                        cells[columnIndex].style.color = "white";
+                    } else if (value >= 4 && value <= 9) {
+                        cells[columnIndex].style.backgroundColor = "orange";
+                        cells[columnIndex].style.color = "white";
+                    } else if (value >= 2 && value <= 3) {
+                        cells[columnIndex].style.backgroundColor = "yellow";
+                        cells[columnIndex].style.color = "black"; // Ensure readability on yellow
+                    } else if (value <= 1) {
+                        cells[columnIndex].style.backgroundColor = "red";
+                        cells[columnIndex].style.color = "white";
+                    }
+                }
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

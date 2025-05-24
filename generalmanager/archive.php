@@ -8,8 +8,9 @@
 <body>
 <div class="container mt-5">
     <h2><b>All Orders Combined History</b></h2>
-   <div style="overflow:hidden;">
-             <table class="table table-bordered table-striped table-hover" style="width:100%">
+    <hr>
+   <div style="overflow-y: auto;">
+             <table class="table " style="width:100%">
         <thead class="table-dark">
             <tr>
                 <th>PO Number</th>

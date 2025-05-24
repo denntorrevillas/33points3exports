@@ -85,7 +85,7 @@ $conn->close();
         <hr>
 
         <div class="table-div" style="overflow-x:auto;">
-            <table class="table table-bordered table-striped">
+            <table class="table">
                 <thead>
                     <tr>
                         <th>PO No.</th>

@@ -45,7 +45,7 @@ $conn->close();
     <h2><b>Shipping Table</b></h2>
     <hr />
     <div style="overflow-x:auto;">
-        <table class="table table-bordered table-striped">
+        <table class="table">
             <thead>
                 <tr>
                     <th>PO No.</th>

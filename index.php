@@ -23,12 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Verify password
         if (password_verify($password, $row['password'])) {
             // Store staff ID in session
-            $_SESSION['staff_id'] = $row['id'];
+            $_SESSION['staff_ID'] = $row['staff_ID'];
 
             // Redirect based on department
             switch ($row['department']) {
                 case 'Marketing':
-                    header('Location: marketing');
+                    header('Location: marketing/index.php');
                     break;
                 case 'Accounting':
                     header('Location: accounting');
