@@ -220,7 +220,7 @@ function statusClass($value) {
 <body>
 
 <div class="container">
-  <h2>Track PO Number</h2>
+  <h2>Track Order</h2>
   <form method="POST" action="">
     <input type="text" name="poNumber" placeholder="Enter PO Number" value="<?= htmlspecialchars($poNumber ?? '') ?>" required />
     <button type="submit">Track</button>

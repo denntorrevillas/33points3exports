@@ -103,7 +103,7 @@ function statusClass($value) {
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>PO Tracking Timeline - Minimal</title>
+<title>Track Order</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
  
@@ -220,7 +220,7 @@ function statusClass($value) {
 <body>
 
 <div class="container">
-  <h2>Track PO Number</h2>
+  <h2>Track Order</h2>
   <form method="POST" action="">
     <input type="text" name="poNumber" placeholder="Enter PO Number" value="<?= htmlspecialchars($poNumber ?? '') ?>" required />
     <button type="submit">Track</button>

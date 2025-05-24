@@ -31,6 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check for duplicate PO Number
     $checkQuery = "SELECT COUNT(*) as count FROM Orders WHERE poNumber = ?";
     $stmt = $conn->prepare($checkQuery);
+    if (!$stmt) {
+        die("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+    }
     $stmt->bind_param("s", $poNumber);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -51,7 +54,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
 
-        if ($stmt) {
+        if (!$stmt) {
+            echo "<script>
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Query prepare error: " . addslashes($conn->error) . "',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            </script>";
+        } else {
             $stmt->bind_param("ssssis", $poNumber, $buyer, $orderDate, $shipDate, $leadTime, $overallStatus);
 
             if ($stmt->execute()) {
@@ -70,7 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo "<script>
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Failed to add the order. Please try again.',
+                        text: 'Failed to add the order: " . addslashes($stmt->error) . "',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
@@ -78,26 +90,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $stmt->close();
-        } else {
-            echo "<script>
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Query error: " . $conn->error . "',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            </script>";
         }
     }
 }
 
-// Fetch the orders data
-$query = "SELECT * FROM Orders";
+// Fetch orders with daysLeft calculation
+$query = "SELECT *, DATEDIFF(shipDate, CURDATE()) AS daysLeft FROM Orders";
 $result = $conn->query($query);
 if ($result) {
     $orders = $result->fetch_all(MYSQLI_ASSOC);
 }
-$conn->close(); // Close connection only after all database operations
+$conn->close();
 ?>
 
 
@@ -108,9 +111,12 @@ $conn->close(); // Close connection only after all database operations
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Add Bootstrap CSS & JS for modal (make sure you have these or replace with your version) -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" /> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h2><b>Add Order</b></h2>
         <hr>
 
@@ -118,8 +124,8 @@ $conn->close(); // Close connection only after all database operations
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addOrderModal">
                 Add Order
             </button>
-            <div class="search w-20">
-                <input id="searchInput" class="form-control" type="text" placeholder="Search Order" />
+            <div class="search w-20 d-flex">
+                <input id="searchInput" class="form-control me-2" type="text" placeholder="Search Order" />
                 <button type="button" id="searchButton" class="btn btn-success">
                     SEARCH
                 </button>
@@ -127,8 +133,8 @@ $conn->close(); // Close connection only after all database operations
         </div>
 
         <div class="table-div">
-            <table class="table">
-                <thead>
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
                     <tr>
                         <th>PO No.</th>
                         <th>Buyer</th>
@@ -137,7 +143,6 @@ $conn->close(); // Close connection only after all database operations
                         <th>Days Left</th>
                         <th>Lead Time</th>
                         <th>Overall Status</th>
-                      
                     </tr>
                 </thead>
                 <tbody>
@@ -151,8 +156,6 @@ $conn->close(); // Close connection only after all database operations
                                 <td><?= htmlspecialchars($order['daysLeft']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['leadTime']); ?> Days</td>
                                 <td><?= htmlspecialchars($order['overallStatus']); ?></td>
-                              
-
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
@@ -185,8 +188,8 @@ $conn->close(); // Close connection only after all database operations
                             <input type="text" name="buyer" class="form-control" id="buyer" placeholder="Enter Buyer Name" required />
                         </div>
                         <div class="mb-3">
-                            <label for="leadTime" class="form-label">Lead Time</label>
-                            <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required />
+                            <label for="leadTime" class="form-label">Lead Time (days)</label>
+                            <input type="number" name="leadTime" class="form-control" id="leadTime" placeholder="Enter Lead Time" required min="0" />
                         </div>
                     </form>
                 </div>
@@ -217,35 +220,33 @@ $conn->close(); // Close connection only after all database operations
         });
 
         document.addEventListener("DOMContentLoaded", () => {
-  const targetColumns = [4]; // Columns 5 and 6 (0-based indices)
-  const rows = document.querySelectorAll("table tr");
+            const targetColumns = [4]; // Days Left column index (0-based)
+            const rows = document.querySelectorAll("table tbody tr");
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
 
-    targetColumns.forEach(columnIndex => {
-      if (cells[columnIndex]) {
-        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
+                targetColumns.forEach(columnIndex => {
+                    if (cells[columnIndex]) {
+                        const value = parseInt(cells[columnIndex].textContent, 10);
 
-        if (value > 10) {
-          cells[columnIndex].style.backgroundColor = "green";
-        cells[columnIndex].style.color = "white"; // Change text color to white
-        } else if (value >= 4 && value >=9) {
-          cells[columnIndex].style.backgroundColor = "orange";
-           cells[columnIndex].style.color = "white";
-        } else if (value >= 2 && value <= 3) {
-          cells[columnIndex].style.backgroundColor = "yellow";
-           cells[columnIndex].style.color = "white";
-        } else if (value <= 1) {
-          cells[columnIndex].style.backgroundColor = "red";
-           cells[columnIndex].style.color = "white";
-        }
-      }
-    });
-  });
-});
-
-
+                        if (value >= 10) {
+                            cells[columnIndex].style.backgroundColor = "green";
+                            cells[columnIndex].style.color = "white";
+                        } else if (value >= 4 && value <= 9) {
+                            cells[columnIndex].style.backgroundColor = "orange";
+                            cells[columnIndex].style.color = "white";
+                        } else if (value >= 2 && value <= 3) {
+                            cells[columnIndex].style.backgroundColor = "yellow";
+                            cells[columnIndex].style.color = "black"; // yellow bg better with black text
+                        } else if (value <= 1) {
+                            cells[columnIndex].style.backgroundColor = "red";
+                            cells[columnIndex].style.color = "white";
+                        }
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

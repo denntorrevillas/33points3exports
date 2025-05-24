@@ -20,6 +20,7 @@
                     <th>Lead Time</th>
                     <th>Date Completed</th>
                     <th>Completion Span</th>
+                    <th>Completed by</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +31,25 @@
                
 
                 // SQL query to fetch data
-                $sql = "SELECT poNumber, receivedCopy, paymentReceived, dateReceived, deadline, leadTime, dateCompleted, completionSpan FROM accountinghistory";
+                $sql = "SELECT 
+    ah.poNumber,
+    ah.receivedCopy,
+    ah.paymentReceived,
+    ah.dateReceived,
+    ah.deadline,
+    ah.daysLeft,
+    ah.leadTime,
+    ah.dateCompleted,
+    ah.completionSpan,
+    ah.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    accountinghistory ah
+JOIN 
+    staff s
+ON 
+    ah.staff_ID = s.staff_ID;
+";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
@@ -45,6 +64,7 @@
                         echo "<td>" . htmlspecialchars($row['leadTime']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['dateCompleted']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['completionSpan']) . "</td>";
+                         echo "<td>" . htmlspecialchars($row['fullname']) . "</td>";
                         echo "</tr>";
                     }
                 } else {

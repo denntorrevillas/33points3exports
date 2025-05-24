@@ -3,7 +3,24 @@
 include '../db.php'; // Adjust the path to your database connection file
 
 // Fetch data from the ProductionTable
-$query = "SELECT * FROM production ORDER BY poNumber"; // Make sure ordered
+$query = "SELECT 
+    p.poNumber,
+    p.finishing,
+    p.packed,
+    p.inspected,
+    p.dateReceived,
+    p.deadline,
+    p.daysLeft,
+    p.leadTime,
+    p.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    production p
+JOIN 
+    staff s
+ON 
+    p.staff_ID = s.staff_ID;
+"; // Make sure ordered
 $result = $conn->query($query);
 
 // Check if there are any results
@@ -40,17 +57,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             packed = ?, 
             inspected = ?, 
             daysLeft = ?, 
-            deadline = ? 
+            deadline = ? ,
+            staff_ID= ?
         WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssss", 
+        "sssssss", 
         $finishing, 
         $packed, 
         $inspected, 
         $daysLeft, 
         $deadline, 
+        $staff_ID,
         $poNumber
+
     );
 
     if ($stmt->execute()) {
@@ -91,6 +111,7 @@ $conn->close();
                     <th>Deadline</th>
                     <th>Days Left</th>
                     <th>Lead Time</th>
+                    <th>Last Modified by</th>
                     <th style="text-align:center;">Action</th>
                 </tr>
             </thead>
@@ -106,12 +127,9 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                             <td><?= htmlspecialchars($data['fullname']); ?></td>
                             <td style="text-align:center;">
-                                <button 
-                                    data-toggle="modal" 
-                                    data-target="#editModal<?= $data['poNumber']; ?>" 
-                                    style="border:none; background:none; padding:0; outline:none;"
-                                >
+                                 <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>

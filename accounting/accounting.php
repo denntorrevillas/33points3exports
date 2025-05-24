@@ -3,8 +3,25 @@
 include '../db.php'; 
 
 // Query to fetch data from the accounting table
-$query = "SELECT * FROM accounting";
+$query = "SELECT 
+    s.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname,
+    a.poNumber,
+    a.receivedCopy,
+    a.paymentReceived,
+    a.dateReceived,
+    a.deadline,
+    a.daysLeft,
+    a.leadTime
+FROM 
+    staff s
+RIGHT JOIN 
+    accounting a ON s.staff_ID = a.staff_ID
+ORDER BY 
+    s.staff_ID DESC;
+";
 $result = $conn->query($query);
+
 
 if ($result) {
     $accountingData = $result->fetch_all(MYSQLI_ASSOC);
@@ -18,14 +35,20 @@ $updateSuccess = false;
 $updateError = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
-    $poNumber = $_POST['poNumber'] ?? null;
-    $receivedCopy = $_POST['receivedCopy'] ?? null;
-    $paymentReceived = $_POST['paymentReceived'] ?? null;
+    $poNumber = trim($_POST['poNumber'] ?? '');
+    $receivedCopy = trim($_POST['receivedCopy'] ?? '');
+    $paymentReceived = trim($_POST['paymentReceived'] ?? '');
+    $staff_ID = $_SESSION['staff_ID'];
 
-    if ($poNumber && $receivedCopy && $paymentReceived) {
-        $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ? WHERE poNumber = ?";
+    if ($poNumber !== '' && $receivedCopy !== '') {
+        // Allow paymentReceived to be empty if receivedCopy != 'Completed'
+        if ($receivedCopy !== 'Completed') {
+            $paymentReceived = ''; // Ensure disabled paymentReceived is empty
+        }
+
+        $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ?, staff_ID= ? WHERE poNumber = ?";
         $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param("sss", $receivedCopy, $paymentReceived, $poNumber);
+        $stmt->bind_param("ssss", $receivedCopy, $paymentReceived, $staff_ID , $poNumber);
 
         if ($stmt->execute()) {
             $updateSuccess = true;
@@ -66,6 +89,7 @@ $conn->close();
                     <th>Deadline</th>
                     <th>Days Left</th>
                     <th>Lead Time</th>
+                    <th>Last Modified By</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -80,32 +104,33 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                              <td><?= htmlspecialchars($data['fullname']); ?></td>
+                            
                             <td>
-                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" 
-                                    style="border: none; background: none; padding: 0; outline: none;">
+                                   <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
                         </tr>
 
                         <!-- Modal for editing each row -->
-                        <div class="modal fade" id="editModal<?= $data['poNumber']; ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= $data['poNumber']; ?>" aria-hidden="true">
+                        <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber']); ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="editModalLabel<?= $data['poNumber']; ?>">Edit Accounting Record</h5>
+                                        <h5 class="modal-title" id="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>">Edit Accounting Record</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                     <form method="POST" action="">
                                         <div class="modal-body">
-                                            <input type="hidden" name="poNumber" value="<?= $data['poNumber']; ?>" />
+                                            <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
 
                                             <!-- Received Copy Dropdown -->
                                             <div class="form-group">
-                                                <label for="receivedCopy">Received Copy</label>
-                                                <select class="form-control" name="receivedCopy" id="receivedCopy<?= $data['poNumber']; ?>" required>
+                                                <label for="receivedCopy<?= htmlspecialchars($data['poNumber']); ?>">Received Copy</label>
+                                                <select class="form-control" name="receivedCopy" id="receivedCopy<?= htmlspecialchars($data['poNumber']); ?>" required>
                                                     <option value="Not Started" <?= $data['receivedCopy'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                     <option value="In Progress" <?= $data['receivedCopy'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                     <option value="Completed" <?= $data['receivedCopy'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -114,8 +139,9 @@ $conn->close();
 
                                             <!-- Payment Received Dropdown -->
                                             <div class="form-group">
-                                                <label for="paymentReceived">Payment Received</label>
-                                                <select class="form-control" name="paymentReceived" id="paymentReceived<?= $data['poNumber']; ?>" required <?= $data['receivedCopy'] != 'Completed' ? 'disabled' : ''; ?>>
+                                                <label for="paymentReceived<?= htmlspecialchars($data['poNumber']); ?>">Payment Received</label>
+                                                <select class="form-control" name="paymentReceived" id="paymentReceived<?= htmlspecialchars($data['poNumber']); ?>" <?= $data['receivedCopy'] != 'Completed' ? 'disabled' : ''; ?>>
+                                                 
                                                     <option value="Not Started" <?= $data['paymentReceived'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                     <option value="In Progress" <?= $data['paymentReceived'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                     <option value="Completed" <?= $data['paymentReceived'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -149,46 +175,68 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Apply background color to Days Left column (index 5)
+            const targetColumns = [5]; 
+            const rows = document.querySelectorAll("table tbody tr");
 
-                      document.addEventListener("DOMContentLoaded", () => {
-  const targetColumns = [5]; // Columns 5 and 6 (0-based indices)
-  const rows = document.querySelectorAll("table tr");
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
+                targetColumns.forEach(columnIndex => {
+                    if (cells[columnIndex]) {
+                        const value = parseInt(cells[columnIndex].textContent.trim(), 10);
 
-    targetColumns.forEach(columnIndex => {
-      if (cells[columnIndex]) {
-        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
+                        if (isNaN(value)) return;
 
-        if (value > 10) {
-          cells[columnIndex].style.backgroundColor = "green";
-        cells[columnIndex].style.color = "white"; // Change text color to white
-        } else if (value >= 4 && value >=9) {
-          cells[columnIndex].style.backgroundColor = "orange";
-           cells[columnIndex].style.color = "white";
-        } else if (value >= 2 && value <= 3) {
-          cells[columnIndex].style.backgroundColor = "yellow";
-           cells[columnIndex].style.color = "white";
-        } else if (value <= 1) {
-          cells[columnIndex].style.backgroundColor = "red";
-           cells[columnIndex].style.color = "white";
-        }
-      }
-    });
-  });
-});
+                        if (value > 10) {
+                            cells[columnIndex].style.backgroundColor = "green";
+                            cells[columnIndex].style.color = "white";
+                        } else if (value >= 4 && value <= 9) {
+                            cells[columnIndex].style.backgroundColor = "orange";
+                            cells[columnIndex].style.color = "white";
+                        } else if (value >= 2 && value <= 3) {
+                            cells[columnIndex].style.backgroundColor = "yellow";
+                            cells[columnIndex].style.color = "black";
+                        } else if (value <= 1) {
+                            cells[columnIndex].style.backgroundColor = "red";
+                            cells[columnIndex].style.color = "white";
+                        }
+                    }
+                });
+            });
+        });
 
+        // Enable/disable paymentReceived dropdown based on receivedCopy value
+        $(document).ready(function() {
+            $('.modal').each(function() {
+                const modal = $(this);
+                const receivedCopy = modal.find('select[name="receivedCopy"]');
+                const paymentReceived = modal.find('select[name="paymentReceived"]');
 
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.modal').forEach(modal => {
-                const receivedCopyDropdown = modal.querySelector('[name="receivedCopy"]');
-                const paymentReceivedDropdown = modal.querySelector('[name="paymentReceived"]');
+                // Initial state on modal show
+                modal.on('show.bs.modal', function () {
+                    if (receivedCopy.val() === 'Completed') {
+                        paymentReceived.prop('disabled', false);
+                        if (!paymentReceived.val()) {
+                            paymentReceived.val('Not Started');
+                        }
+                    } else {
+                        paymentReceived.prop('disabled', true);
+                        paymentReceived.val('');
+                    }
+                });
 
-                receivedCopyDropdown.addEventListener('change', () => {
-                    paymentReceivedDropdown.disabled = receivedCopyDropdown.value !== 'Completed';
-                    if (paymentReceivedDropdown.disabled) {
-                        paymentReceivedDropdown.value = '';
+                // On change event for receivedCopy
+                receivedCopy.on('change', function() {
+                    if ($(this).val() === 'Completed') {
+                        paymentReceived.prop('disabled', false);
+                        if (!paymentReceived.val()) {
+                            paymentReceived.val('Not Started');
+                        }
+                    } else {
+                        paymentReceived.prop('disabled', true);
+                        paymentReceived.val('');
                     }
                 });
             });
@@ -201,8 +249,7 @@ $conn->close();
                 text: 'Record updated successfully!',
                 confirmButtonColor: '#3085d6',
                 confirmButtonText: 'OK'
-            }).then(() => {
-                window.location.href = window.location.href;
+           
             });
         <?php elseif ($updateError): ?>
             Swal.fire({

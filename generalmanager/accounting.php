@@ -15,12 +15,11 @@ if ($result) {
 }
 
 // Handle the update
-// Handle the update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
     $newLeadTime = intval($_POST['leadTime']);
 
-    // Get current deadline only (daysLeft won't be updated)
+    // Get the current deadline
     $deadlineQuery = "SELECT deadline FROM accounting WHERE poNumber = ?";
     $stmt1 = $conn->prepare($deadlineQuery);
     $stmt1->bind_param("s", $poNumber);
@@ -29,15 +28,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $stmt1->fetch();
     $stmt1->close();
 
-    // Calculate new deadline by adding newLeadTime days to current deadline
+    // Calculate the new deadline and daysLeft
     $deadlineDate = new DateTime($currentDeadline);
     $deadlineDate->modify("+$newLeadTime days");
     $newDeadline = $deadlineDate->format('Y-m-d');
 
-    // Update leadTime and deadline only (no daysLeft)
-    $updateQuery = "UPDATE accounting SET leadTime = ?, deadline = ? WHERE poNumber = ?";
+    $currentDate = new DateTime();
+    $daysLeft = $currentDate->diff($deadlineDate)->days;
+    if ($currentDate > $deadlineDate) {
+        $daysLeft = 0; // If the deadline is past, set daysLeft to 0
+    }
+
+    // Update leadTime, deadline, and daysLeft
+    $updateQuery = "UPDATE accounting SET leadTime = ?, deadline = ?, daysLeft = ? WHERE poNumber = ?";
     $stmt2 = $conn->prepare($updateQuery);
-    $stmt2->bind_param("iss", $newLeadTime, $newDeadline, $poNumber);
+    $stmt2->bind_param("isis", $newLeadTime, $newDeadline, $daysLeft, $poNumber);
 
     if ($stmt2->execute()) {
         echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
@@ -45,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
             Swal.fire({
                 icon: 'success',
                 title: 'Updated!',
-                text: 'Lead Time and Deadline updated successfully!',
+                text: 'Lead Time, Deadline, and Days Left updated successfully!',
                 showConfirmButton: true
             }).then(() => {
                 window.location.href = '';
@@ -58,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     $stmt2->close();
 }
-
 
 // Close the connection
 $conn->close();
@@ -102,8 +106,8 @@ $conn->close();
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
                             <td>
-                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>">
-                                    <img src="../assets/edit2.png" alt="Edit" style="height: 20px; width: 20px;" />
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
+                                    <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
                         </tr>

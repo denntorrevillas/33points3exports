@@ -22,6 +22,7 @@
                     <th>Lead Time</th>
                     <th>Date Completed</th>
                     <th>Completion Span</th>
+                    <th>Completed by</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +31,28 @@
                 include '../db.php';
 
                 // SQL query to fetch data
-                $sql = "SELECT poNumber, supplierEvaluated, supplierPOCreated, gmApproved, supplierPOIssued, dateReceived, deadline, leadTime, dateCompleted, completionSpan FROM monitoringhistory";
+                $sql = " SELECT 
+    mh.monitoringID,
+    mh.poNumber,
+    mh.supplierEvaluated,
+    mh.supplierPOCreated,
+    mh.gmApproved,
+    mh.supplierPOIssued,
+    mh.dateReceived,
+    mh.deadline,
+    mh.daysLeft,
+    mh.leadTime,
+    mh.dateCompleted,
+    mh.completionSpan,
+    mh.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    monitoringhistory mh
+JOIN 
+    staff s
+ON 
+    mh.staff_ID = s.staff_ID;
+";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
@@ -47,6 +69,7 @@
                         echo "<td>" . htmlspecialchars($row['leadTime']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['dateCompleted']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['completionSpan']) . "</td>";
+                         echo "<td>" . htmlspecialchars($row['fullname']) . "</td>";
                         echo "</tr>";
                     }
                 } else {

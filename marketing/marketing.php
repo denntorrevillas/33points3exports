@@ -1,15 +1,36 @@
 <?php
-
 include '../db.php'; // Assuming the database connection is in db.php
 
-// Query to fetch data from the marketing table
-$query = "SELECT * FROM marketing";
+// Modified query: LEFT JOIN to avoid missing marketing rows without staff
+$query = "SELECT 
+    m.marketingID,
+    m.poNumber,
+    m.receivedOrder,
+    m.businessAward,
+    m.endorsedToGM,
+    m.orderReceived,
+    m.deadline,
+    m.daysLeft,
+    m.leadTime,
+    m.to_delete,
+    m.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    marketing m
+LEFT JOIN 
+    staff s ON m.staff_ID = s.staff_ID";
+
 $result = $conn->query($query);
+
+if (!$result) {
+    die("Query Error: " . $conn->error);
+}
 
 if ($result->num_rows > 0) {
     $marketingData = $result->fetch_all(MYSQLI_ASSOC);
 } else {
     $marketingData = [];
+    echo "<p>No marketing records found.</p>";
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
@@ -18,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $businessAwardNew = $_POST['businessAward'] ?? 'Not Started';
     $endorsedToGMNew = $_POST['endorsedToGM'] ?? 'Not Started';
     $leadTimeNew = isset($_POST['leadTime']) && $_POST['leadTime'] !== '' ? $_POST['leadTime'] : NULL;
+    $staff_ID = $_SESSION['staff_ID'] ?? 'Unknown';
 
     // Fetch old values for comparison
     $fetchOld = $conn->prepare("SELECT receivedOrder, businessAward, endorsedToGM, leadTime FROM marketing WHERE poNumber = ?");
@@ -25,21 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $fetchOld->execute();
     $fetchOld->store_result();
 
-    // Initialize variables
-    $receivedOrderOld = $businessAwardOld = $endorsedToGMOld = $leadTimeOld = null;
-
     $fetchOld->bind_result($receivedOrderOld, $businessAwardOld, $endorsedToGMOld, $leadTimeOld);
     $fetchOld->fetch();
     $fetchOld->close();
 
     // Update marketing table
-    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ? WHERE poNumber = ?";
+    $updateQuery = "UPDATE marketing SET receivedOrder = ?, businessAward = ?, endorsedToGM = ?, leadTime = ?, staff_ID = ? WHERE poNumber = ?";
     $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("sssss", $receivedOrderNew, $businessAwardNew, $endorsedToGMNew, $leadTimeNew, $poNumber);
+    $stmt->bind_param("ssssss", $receivedOrderNew, $businessAwardNew, $endorsedToGMNew, $leadTimeNew, $staff_ID, $poNumber);
 
     if ($stmt->execute()) {
         // Prepare to insert into history table
-        $staff_id = $_SESSION['staff_ID'] ?? 'Unknown';
         $department = 'marketing';
 
         $historyInsert = $conn->prepare("INSERT INTO history (poNumber, columnName, oldValue, newValue, actionBy, department) VALUES (?, ?, ?, ?, ?, ?)");
@@ -47,24 +65,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
         // Check each changed column and insert into history
         if ($receivedOrderOld !== $receivedOrderNew) {
             $columnName = 'receivedOrder';
-            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $receivedOrderOld, $receivedOrderNew, $staff_id, $department);
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $receivedOrderOld, $receivedOrderNew, $staff_ID, $department);
             $historyInsert->execute();
         }
         if ($businessAwardOld !== $businessAwardNew) {
             $columnName = 'businessAward';
-            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $businessAwardOld, $businessAwardNew, $staff_id, $department);
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $businessAwardOld, $businessAwardNew, $staff_ID, $department);
             $historyInsert->execute();
         }
         if ($endorsedToGMOld !== $endorsedToGMNew) {
             $columnName = 'endorsedToGM';
-            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $endorsedToGMOld, $endorsedToGMNew, $staff_id, $department);
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $endorsedToGMOld, $endorsedToGMNew, $staff_ID, $department);
             $historyInsert->execute();
         }
         if ((string)$leadTimeOld !== (string)$leadTimeNew) {
             $columnName = 'leadTime';
             $oldVal = $leadTimeOld === null ? 'NULL' : $leadTimeOld;
             $newVal = $leadTimeNew === null ? 'NULL' : $leadTimeNew;
-            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $oldVal, $newVal, $staff_id, $department);
+            $historyInsert->bind_param("ssssss", $poNumber, $columnName, $oldVal, $newVal, $staff_ID, $department);
             $historyInsert->execute();
         }
 
@@ -76,8 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
                 title: 'Update Successful',
                 text: 'Record updated successfully!',
                 confirmButtonText: 'OK'
-            }).then(() => {
-                
             });
         </script>";
     } else {
@@ -102,21 +118,20 @@ $conn->close();
     <h2><b>Marketing Department</b></h2>
     <hr />
 
-    <div class="table-div" >
+    <div class="table-div">
         <table class="table">
-        
-                <tr>
-                    <th>PO No.</th>
-                    <th>Received Order</th>
-                    <th>Business Award</th>
-                    <th>Endorsed to GM</th>
-                    <th>Order Received</th>
-                    <th>Deadline</th>
-                    <th>Days Left</th>
-                    <th>Lead Time</th>
-                    <th>Action</th>
-                </tr>
-           
+            <tr>
+                <th>PO No.</th>
+                <th>Received Order</th>
+                <th>Business Award</th>
+                <th>Endorsed to GM</th>
+                <th>Order Received</th>
+                <th>Deadline</th>
+                <th>Days Left</th>
+                <th>Lead Time</th>
+                <th>Last Modified by</th>
+                <th>Action</th>
+            </tr>
             <tbody>
                 <?php if (!empty($marketingData)) : ?>
                     <?php foreach ($marketingData as $data) : ?>
@@ -129,8 +144,9 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                            <td><?= htmlspecialchars($data['fullname']); ?></td>
                             <td>
-                               <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;;">
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
@@ -193,7 +209,7 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td class="text-center" colspan="9">No data found in the Marketing Department.</td>
+                        <td class="text-center" colspan="10">No data found in the Marketing Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -201,77 +217,67 @@ $conn->close();
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const targetColumns = [6]; // Column Days Left
+            const rows = document.querySelectorAll("table tr");
 
-          document.addEventListener("DOMContentLoaded", () => {
-  const targetColumns = [6]; // Columns 5 and 6 (0-based indices)
-  const rows = document.querySelectorAll("table tr");
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
 
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
+                targetColumns.forEach(columnIndex => {
+                    if (cells[columnIndex]) {
+                        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
 
-    targetColumns.forEach(columnIndex => {
-      if (cells[columnIndex]) {
-        const value = parseInt(cells[columnIndex].textContent, 10); // Convert cell content to an integer
-
-        if (value > 10) {
-          cells[columnIndex].style.backgroundColor = "green";
-        cells[columnIndex].style.color = "white"; // Change text color to white
-        } else if (value >= 4 && value >=9) {
-          cells[columnIndex].style.backgroundColor = "orange";
-           cells[columnIndex].style.color = "white";
-        } else if (value >= 2 && value <= 3) {
-          cells[columnIndex].style.backgroundColor = "yellow";
-           cells[columnIndex].style.color = "white";
-        } else if (value <= 1) {
-          cells[columnIndex].style.backgroundColor = "red";
-           cells[columnIndex].style.color = "white";
-        }
-      }
-    });
-  });
-});
-
-
-
-    
-
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.modal').forEach(modal => {
-            const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
-            const businessAwardSelect = modal.querySelector('[name="businessAward"]');
-            const endorsedToGMSelect = modal.querySelector('[name="endorsedToGM"]');
-
-            const toggleDisableState = () => {
-                const isReceivedOrderCompleted = receivedOrderSelect.value === 'Completed';
-                const isBusinessAwardCompleted = businessAwardSelect.value === 'Completed';
-
-                businessAwardSelect.disabled = !isReceivedOrderCompleted;
-                endorsedToGMSelect.disabled = !isBusinessAwardCompleted;
-
-                if (!isReceivedOrderCompleted) {
-                    businessAwardSelect.value = 'Not Started';
-                }
-                if (!isBusinessAwardCompleted) {
-                    endorsedToGMSelect.value = 'Not Started';
-                }
-            };
-
-            toggleDisableState();
-
-            receivedOrderSelect.addEventListener('change', toggleDisableState);
-            businessAwardSelect.addEventListener('change', toggleDisableState);
+                        if (value > 10) {
+                            cells[columnIndex].style.backgroundColor = "green";
+                            cells[columnIndex].style.color = "white"; // Change text color to white
+                        } else if (value >= 4 && value <= 9) {
+                            cells[columnIndex].style.backgroundColor = "orange";
+                            cells[columnIndex].style.color = "white";
+                        } else if (value >= 2 && value <= 3) {
+                            cells[columnIndex].style.backgroundColor = "yellow";
+                            cells[columnIndex].style.color = "black";
+                        } else if (value <= 1) {
+                            cells[columnIndex].style.backgroundColor = "red";
+                            cells[columnIndex].style.color = "white";
+                        }
+                    }
+                });
+            });
         });
-    });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.modal').forEach(modal => {
+                const receivedOrderSelect = modal.querySelector('[name="receivedOrder"]');
+                const businessAwardSelect = modal.querySelector('[name="businessAward"]');
+                const endorsedToGMSelect = modal.querySelector('[name="endorsedToGM"]');
+
+                const toggleDisableState = () => {
+                    const isReceivedOrderCompleted = receivedOrderSelect.value === 'Completed';
+                    const isBusinessAwardCompleted = businessAwardSelect.value === 'Completed';
+
+                    businessAwardSelect.disabled = !isReceivedOrderCompleted;
+                    endorsedToGMSelect.disabled = !isBusinessAwardCompleted;
+
+                    if (!isReceivedOrderCompleted) {
+                        businessAwardSelect.value = 'Not Started';
+                    }
+                    if (!isBusinessAwardCompleted) {
+                        endorsedToGMSelect.value = 'Not Started';
+                    }
+                };
+
+                toggleDisableState();
+
+                receivedOrderSelect.addEventListener('change', toggleDisableState);
+                businessAwardSelect.addEventListener('change', toggleDisableState);
+            });
+        });
     </script>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

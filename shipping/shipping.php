@@ -3,7 +3,26 @@
 include '../db.php'; // Adjust the path to your database connection file
 
 // Fetch data from the Shipping Table
-$query = "SELECT * FROM shipping";
+$query = "SELECT 
+    sh.poNumber,
+    sh.pre_loading,
+    sh.loading,
+    sh.transported,
+    sh.delivered_to_customer,
+    sh.dateReceived,
+    sh.deadline,
+    sh.daysLeft,
+    sh.leadTime,
+    sh.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    shipping sh
+LEFT JOIN 
+    staff s
+ON 
+    sh.staff_ID = s.staff_ID
+ORDER BY 
+    sh.delivered_to_customer ASC;";
 $result = $conn->query($query);
 
 // Check if there are any results
@@ -40,17 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
             loading = ?, 
             transported = ?, 
             delivered_to_customer = ?, 
-            deadline = ? 
+            deadline = ? ,
+            staff_ID = ?
         WHERE poNumber = ?";
 
     $stmt = $conn->prepare($updateQuery);
     $stmt->bind_param(
-        "ssssss", 
+        "sssssss", 
         $pre_loading, 
         $loading, 
         $transported, 
         $delivered_to_customer, 
         $deadline, 
+         $staff_ID,
         $poNumber
     );
 
@@ -94,6 +115,7 @@ $conn->close();
                         <th>Deadline</th>
                         <th>Days Left</th>
                         <th>Lead Time</th>
+                        <th>Last Modified By</th>
                         <th>Action</th>
                     </tr>
                
@@ -101,7 +123,7 @@ $conn->close();
                     <?php if (!empty($shippingData)) : ?>
                         <?php foreach ($shippingData as $data) : ?>
                             <tr>
-                                <td>PO<?= htmlspecialchars($data['poNumber']); ?></td>
+                                <td><?= htmlspecialchars($data['poNumber']); ?></td>
                                 <td><?= htmlspecialchars($data['pre_loading']); ?></td>
                                 <td><?= htmlspecialchars($data['loading']); ?></td>
                                 <td><?= htmlspecialchars($data['transported']); ?></td>
@@ -110,10 +132,11 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['deadline']); ?></td>
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                                 <td><?= htmlspecialchars($data['fullname']); ?></td>
                                 <td style="text-align: center;">
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none;">
-                                        <img src="../assets/edit2.png" alt="Edit">
-                                    </button>
+                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
+                                    <img src="../assets/edit2.png" alt="Edit" />
+                                </button>
                                 </td>
                             </tr>
 
@@ -201,7 +224,7 @@ $conn->close();
                         const value = parseInt(cells[columnIndex].textContent.trim(), 10);
 
                         if (!isNaN(value)) {
-                            if (value > 10) {
+                            if (value >= 10) {
                                 cells[columnIndex].style.backgroundColor = "green";
                                 cells[columnIndex].style.color = "white";
                             } else if (value >= 4 && value <= 9) {

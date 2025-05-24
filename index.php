@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Redirect based on department
             switch ($row['department']) {
                 case 'Marketing':
-                    header('Location: marketing/index.php');
+                    header('Location: marketing');
                     break;
                 case 'Accounting':
                     header('Location: accounting');

@@ -117,7 +117,7 @@ $conn->close();
                                 <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                                 <td><?= htmlspecialchars($data['leadTime']); ?></td>
                                <td style="text-align:center; border-color:transparent;">
-                                    <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none; background: none; padding: 0; outline: none;">
+                                   <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                                 </td>

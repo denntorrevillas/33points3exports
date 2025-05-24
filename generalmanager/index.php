@@ -109,8 +109,16 @@ $stmt->close();
                         <img src="../assets/archive.png" alt="">
                         <a href="?page=archive">Order History</a>
                     </div>  
+
+                    <div class="nav-li">
+                       
+                        <img src="../assets/log.png" alt="">
+                        <a href="../logout.php">Log out</a>
+                       
+                    </div>  
                 </ul>
             </div>
+            <hr>
 
             <div class="logout-div">
            

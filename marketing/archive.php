@@ -3,7 +3,23 @@
 include '../db.php'; // adjust the path accordingly
 
 // SQL query to select specified columns
-$query = "SELECT poNumber, receivedOrder, businessAward, endorsedToGM, orderReceived, dateCompleted, completionSpan FROM marketinghistory";
+$query = "SELECT 
+    mh.poNumber,
+    mh.receivedOrder,
+    mh.businessAward,
+    mh.endorsedToGM,
+    mh.orderReceived,
+    mh.dateCompleted,
+    mh.completionSpan,
+    mh.staff_ID,
+    CONCAT(s.firstname, ' ', s.lastname) AS fullname
+FROM 
+    marketinghistory mh
+JOIN 
+    staff s
+ON 
+    mh.staff_ID = s.staff_ID;
+";
 
 $result = $conn->query($query);
 
@@ -37,6 +53,7 @@ $conn->close();
                 <th>Order Received</th>
                 <th>Date Completed</th>
                 <th>Completion Span</th>
+                <th>Completed By</th>
             </tr>
         </thead>
         <tbody>
@@ -50,6 +67,7 @@ $conn->close();
                         <td><?= htmlspecialchars($row['orderReceived']); ?></td>
                         <td><?= htmlspecialchars($row['dateCompleted']); ?></td>
                         <td><?= htmlspecialchars($row['completionSpan']); ?></td>
+                         <td><?= htmlspecialchars($row['fullname']); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>

@@ -103,7 +103,7 @@ function statusClass($value) {
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>PO Tracking Timeline - Minimal</title>
+<title>Track Order</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
 
