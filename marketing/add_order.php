@@ -75,7 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        window.location.href = window.location.href;
+                        // Reload the page to show the updated table
+                        // location.reload();
                     });
                 </script>";
             } else {
@@ -111,8 +112,6 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Add Bootstrap CSS & JS for modal (make sure you have these or replace with your version) -->
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" /> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
@@ -177,7 +176,6 @@ $conn->close();
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Add Order Form -->
                     <form id="addOrderForm" action="" method="POST">
                         <div class="mb-3">
                             <label for="poNumber" class="form-label">PO No.</label>
@@ -238,7 +236,7 @@ $conn->close();
                             cells[columnIndex].style.color = "white";
                         } else if (value >= 2 && value <= 3) {
                             cells[columnIndex].style.backgroundColor = "yellow";
-                            cells[columnIndex].style.color = "black"; // yellow bg better with black text
+                            cells[columnIndex].style.color = "black";
                         } else if (value <= 1) {
                             cells[columnIndex].style.backgroundColor = "red";
                             cells[columnIndex].style.color = "white";

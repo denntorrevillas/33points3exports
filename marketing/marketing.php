@@ -118,7 +118,7 @@ $conn->close();
     <h2><b>Marketing Department</b></h2>
     <hr />
 
-    <div class="table-div">
+   <div class="table-div" >
         <table class="table">
             <tr>
                 <th>PO No.</th>

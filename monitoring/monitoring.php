@@ -1,131 +1,98 @@
 <?php
-// Include the database connection
-include '../db.php'; // Adjust the path to your database connection file
+include '../db.php';
 
-// Fetch data from the MonitoringTable
-$query = "SELECT 
-    m.monitoringID,
-    m.poNumber,
-    m.supplierEvaluated,
-    m.supplierPOCreated,
-    m.gmApproved,
-    m.supplierPOIssued,
-    m.dateReceived,
-    m.deadline,
-    m.daysLeft,
-    m.leadTime,
-    m.staff_ID,
-    CONCAT(s.firstname, ' ', s.lastname) AS fullname
-FROM 
-    monitoring m
-JOIN 
-    staff s
-ON 
-    m.staff_ID = s.staff_ID
-ORDER BY 
-    m.supplierPOCreated ASC;
+// Fetch data including fullName by joining with staff table
+$query = "
+    SELECT m.*, CONCAT(s.firstName, ' ', s.lastName) AS fullName 
+    FROM monitoring m
+    LEFT JOIN staff s ON m.staff_ID = s.staff_ID
 ";
 $result = $conn->query($query);
 
-// Check if there are any results
 if ($result->num_rows > 0) {
     $monitoringData = $result->fetch_all(MYSQLI_ASSOC);
-
-    // Calculate leadTime dynamically if missing
-    foreach ($monitoringData as &$data) {
-        if (is_null($data['leadTime']) && !is_null($data['dateReceived']) && !is_null($data['deadline'])) {
-            $dateReceived = new DateTime($data['dateReceived']);
-            $deadline = new DateTime($data['deadline']);
-            $interval = $deadline->diff($dateReceived);
-            // If deadline is earlier than dateReceived, leadTime is negative
-            $leadTime = $interval->invert ? -$interval->days : $interval->days;
-            $data['leadTime'] = $leadTime;
-
-            // Update the database with the calculated leadTime
-            $updateLeadTimeQuery = "UPDATE monitoring SET leadTime = ? WHERE poNumber = ?";
-            $stmt = $conn->prepare($updateLeadTimeQuery);
-            $stmt->bind_param("is", $leadTime, $data['poNumber']);
-            $stmt->execute();
-            $stmt->close();
-        }
-    }
 } else {
     $monitoringData = [];
 }
 
-// Handle the update functionality
+$statuses = ['Not Started', 'In Progress', 'Completed'];
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $poNumber = $_POST['poNumber'];
-    $supplierEvaluated = $_POST['supplierEvaluated'] ?? null;
-    $supplierPOCreated = $_POST['supplierPOCreated'] ?? null;
-    $gmApproved = $_POST['gmApproved'] ?? null;
-    $supplierPOIssued = $_POST['supplierPOIssued'] ?? null;
+    $newLeadTime = intval($_POST['leadTime']);
 
-    // Validate required fields
-    if ($supplierEvaluated && $supplierPOCreated && $gmApproved && $supplierPOIssued) {
-        // Update query
-        $updateQuery = "
-            UPDATE monitoring 
-            SET supplierEvaluated = ?, 
-                supplierPOCreated = ?, 
-                gmApproved = ?, 
-                supplierPOIssued = ?,
-                staff_ID = ?
-            WHERE poNumber = ?";
-        $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param(
-            "ssssss", 
-            $supplierEvaluated, 
-            $supplierPOCreated, 
-            $gmApproved, 
-            $supplierPOIssued, 
-             $staff_ID,
-            $poNumber
-        );
+    // Additional fields from POST
+    $supplierEvaluated = $_POST['supplierEvaluated'];
+    $supplierPOCreated = $_POST['supplierPOCreated'];
+    $gmApproved = $_POST['gmApproved'];
+    $supplierPOIssued = $_POST['supplierPOIssued'];
 
-        if ($stmt->execute()) {
-            echo "
-            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-            <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Record updated successfully!',
-                    confirmButtonColor: '#3085d6'
-                }).then(() => {
-                    window.location.href = window.location.href;
-                });
-            </script>";
-        } else {
-            $error = $stmt->error;
-            echo "
-            <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-            <script>
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error updating record: " . addslashes($error) . "',
-                    confirmButtonColor: '#d33'
-                });
-            </script>";
-        }
+    // Get current daysLeft and dateReceived for this poNumber
+    $query = "SELECT daysLeft, dateReceived FROM monitoring WHERE poNumber = ?";
+    $stmt1 = $conn->prepare($query);
+    $stmt1->bind_param("s", $poNumber);
+    $stmt1->execute();
+    $stmt1->bind_result($currentDaysLeft, $dateReceived);
+    $stmt1->fetch();
+    $stmt1->close();
 
-        $stmt->close();
-    } else {
+    // Calculate updated daysLeft by adding the new leadTime input
+    $updatedDaysLeft = intval($currentDaysLeft) + $newLeadTime;
+
+    // Calculate new deadline = dateReceived + updatedDaysLeft days
+    $deadlineDate = new DateTime($dateReceived);
+    $deadlineDate->modify("+$updatedDaysLeft days");
+    $newDeadline = $deadlineDate->format('Y-m-d');
+
+    // Update query with new fields
+    $updateQuery = "
+        UPDATE monitoring 
+        SET leadTime = ?, 
+            daysLeft = ?, 
+            deadline = ?,
+            supplierEvaluated = ?,
+            supplierPOCreated = ?,
+            gmApproved = ?,
+            supplierPOIssued = ?
+        WHERE poNumber = ?";
+
+    $stmt2 = $conn->prepare($updateQuery);
+    $stmt2->bind_param(
+        "iissssss", 
+        $newLeadTime, 
+        $updatedDaysLeft, 
+        $newDeadline, 
+        $supplierEvaluated, 
+        $supplierPOCreated, 
+        $gmApproved, 
+        $supplierPOIssued, 
+        $poNumber
+    );
+
+    if ($stmt2->execute()) {
         echo "
         <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
         <script>
             Swal.fire({
-                icon: 'warning',
-                title: 'Warning',
-                text: 'All fields are required!',
-                confirmButtonColor: '#f0ad4e'
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Record updated successfully!',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = window.location.href;
+                }
             });
-        </script>";
+        </script>
+        ";
+        exit;
+    } else {
+        echo "<script>alert('Error updating record: " . $stmt2->error . "');</script>";
     }
+
+    $stmt2->close();
 }
 
-// Close the database connection
 $conn->close();
 ?>
 
@@ -136,19 +103,19 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monitoring Table</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
-    <!-- SweetAlert2 CSS (optional for styling) -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="container ">
+    <div class="container">
         <h2><b>Monitoring</b></h2>
-        <hr />
+        <hr>
 
         <div class="table-div">
-            <table class="table">
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>PO No.</th>
+                        <th>Full Name</th>
                         <th>Supplier Evaluated</th>
                         <th>Supplier PO Created</th>
                         <th>GM Approved</th>
@@ -157,7 +124,6 @@ $conn->close();
                         <th>Deadline</th>
                         <th>Days Left</th>
                         <th>Lead Time</th>
-                        <th>Last Modified by</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -165,69 +131,84 @@ $conn->close();
                     <?php if (!empty($monitoringData)) : ?>
                         <?php foreach ($monitoringData as $data) : ?>
                             <tr>
-                                <td><?= htmlspecialchars($data['poNumber'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['supplierEvaluated'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOCreated'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['gmApproved'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['supplierPOIssued'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['dateReceived'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['deadline'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['daysLeft'] ?? ''); ?></td>
-                                <td><?= htmlspecialchars($data['leadTime'] ?? ''); ?></td>
-                                 <td><?= htmlspecialchars($data['fullname'] ?? ''); ?></td>
-                                <td>
-                                     <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
-                                    <img src="../assets/edit2.png" alt="Edit" />
-                                </button>
+                                <td><?= htmlspecialchars($data['poNumber']); ?></td>
+                                <td><?= htmlspecialchars($data['fullName'] ?? ''); ?></td>
+                                <td><?= htmlspecialchars($data['supplierEvaluated']); ?></td>
+                                <td><?= htmlspecialchars($data['supplierPOCreated']); ?></td>
+                                <td><?= htmlspecialchars($data['gmApproved']); ?></td>
+                                <td><?= htmlspecialchars($data['supplierPOIssued']); ?></td>
+                                <td><?= htmlspecialchars($data['dateReceived']); ?></td>
+                                <td><?= htmlspecialchars($data['deadline']); ?></td>
+                                <td><?= htmlspecialchars($data['daysLeft']); ?></td>
+                                <td><?= htmlspecialchars($data['leadTime']); ?></td>
+                                <td style="text-align:center;">
+                                    <button data-toggle="modal" data-target="#editModal<?= htmlspecialchars($data['poNumber']); ?>" style="border: none; background-color:transparent;">
+                                        <img src="../assets/edit2.png" alt="Edit" />
+                                    </button>
                                 </td>
                             </tr>
 
-                            <!-- Modal for editing each row -->
-                            <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" tabindex="-1" role="dialog" aria-hidden="true">
+                            <!-- Modal for editing -->
+                            <div class="modal fade" id="editModal<?= htmlspecialchars($data['poNumber']); ?>" tabindex="-1" role="dialog" aria-labelledby="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title">Edit Monitoring Record</h5>
+                                            <h5 class="modal-title" id="editModalLabel<?= htmlspecialchars($data['poNumber']); ?>">Edit Monitoring Data</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
                                         <form method="POST">
                                             <div class="modal-body">
-                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber'] ?? ''); ?>" />
+                                                <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
 
-                                                <!-- Dropdown fields -->
                                                 <div class="form-group">
-                                                    <label>Supplier Evaluated</label>
-                                                    <select name="supplierEvaluated" class="form-control" required>
-                                                        <option value="Not Started" <?= ($data['supplierEvaluated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= ($data['supplierEvaluated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= ($data['supplierEvaluated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                    <label for="supplierEvaluated<?= htmlspecialchars($data['poNumber']); ?>">Supplier Evaluated</label>
+                                                    <select name="supplierEvaluated" class="form-control" id="supplierEvaluated<?= htmlspecialchars($data['poNumber']); ?>" required>
+                                                        <?php foreach ($statuses as $status): ?>
+                                                            <option value="<?= $status; ?>" <?= ($data['supplierEvaluated'] === $status) ? 'selected' : ''; ?>><?= $status; ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                 </div>
+
                                                 <div class="form-group">
-                                                    <label>Supplier PO Created</label>
-                                                    <select name="supplierPOCreated" class="form-control" required>
-                                                        <option value="Not Started" <?= ($data['supplierPOCreated'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= ($data['supplierPOCreated'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= ($data['supplierPOCreated'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                    <label for="supplierPOCreated<?= htmlspecialchars($data['poNumber']); ?>">Supplier PO Created</label>
+                                                    <select name="supplierPOCreated" class="form-control" id="supplierPOCreated<?= htmlspecialchars($data['poNumber']); ?>" required>
+                                                        <?php foreach ($statuses as $status): ?>
+                                                            <option value="<?= $status; ?>" <?= ($data['supplierPOCreated'] === $status) ? 'selected' : ''; ?>><?= $status; ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                 </div>
+
                                                 <div class="form-group">
-                                                    <label>GM Approved</label>
-                                                    <select name="gmApproved" class="form-control" required>
-                                                        <option value="Not Started" <?= ($data['gmApproved'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= ($data['gmApproved'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= ($data['gmApproved'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                                    <label for="gmApproved<?= htmlspecialchars($data['poNumber']); ?>">GM Approved</label>
+                                                    <select name="gmApproved" class="form-control" id="gmApproved<?= htmlspecialchars($data['poNumber']); ?>" required>
+                                                        <?php foreach ($statuses as $status): ?>
+                                                            <option value="<?= $status; ?>" <?= ($data['gmApproved'] === $status) ? 'selected' : ''; ?>><?= $status; ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Supplier PO Issued</label>
-                                                    <select name="supplierPOIssued" class="form-control" required>
-                                                        <option value="Not Started" <?= ($data['supplierPOIssued'] ?? '') === 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
-                                                        <option value="In Progress" <?= ($data['supplierPOIssued'] ?? '') === 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                        <option value="Completed" <?= ($data['supplierPOIssued'] ?? '') === 'Completed' ? 'selected' : ''; ?>>Completed</option>
+
+                                               <div class="form-group">
+                                                    <label for="supplierPOIssued<?= htmlspecialchars($data['poNumber']); ?>">Supplier PO Issued</label>
+                                                    <select name="supplierPOIssued" class="form-control" id="supplierPOIssued<?= htmlspecialchars($data['poNumber']); ?>" required>
+                                                        <?php foreach ($statuses as $status): ?>
+                                                            <option value="<?= $status; ?>" <?= ($data['supplierPOIssued'] === $status) ? 'selected' : ''; ?>><?= $status; ?></option>
+                                                        <?php endforeach; ?>
                                                     </select>
+                                                </div>
+                                                    
+                                                <div class="form-group">
+                                                    <label for="leadTime<?= htmlspecialchars($data['poNumber']); ?>">Lead Time (in days)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="leadTime"
+                                                        class="form-control"
+                                                        id="leadTime<?= htmlspecialchars($data['poNumber']); ?>"
+                                                        value="<?= htmlspecialchars($data['leadTime']); ?>"
+                                                        min="0"
+                                                        required
+                                                    />
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
@@ -241,7 +222,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="10" class="text-center">No data found in the Monitoring Table.</td>
+                            <td colspan="11">No data found in the Monitoring Table.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -250,42 +231,37 @@ $conn->close();
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const daysLeftColumnIndex = 8; // Correct zero-based index for Days Left column
 
-   document.addEventListener("DOMContentLoaded", () => {
-    const targetColumnIndex = 7; // 0-based index of the "Days Left" column (adjust as needed)
-    const rows = document.querySelectorAll("table tbody tr");
+            const rows = document.querySelectorAll("table tbody tr");
 
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        const targetCell = cells[targetColumnIndex];
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+                if (cells[daysLeftColumnIndex]) {
+                    const value = parseInt(cells[daysLeftColumnIndex].textContent.trim(), 10);
 
-        if (targetCell) {
-            const value = parseInt(targetCell.textContent, 10); // Convert cell content to an integer
-
-            if (!isNaN(value)) {
-                if (value > 10) {
-                    targetCell.style.backgroundColor = "green";
-                    targetCell.style.color = "white";
-                } else if (value >= 4 && value <= 9) {
-                    targetCell.style.backgroundColor = "orange";
-                    targetCell.style.color = "white";
-                } else if (value >= 2 && value <= 3) {
-                    targetCell.style.backgroundColor = "yellow";
-                    targetCell.style.color = "black"; // Yellow background works better with black text
-                } else if (value <= 1) {
-                    targetCell.style.backgroundColor = "red";
-                    targetCell.style.color = "white";
+                    if (!isNaN(value)) {
+                        if (value >= 10) {
+                            cells[daysLeftColumnIndex].style.backgroundColor = "green";
+                            cells[daysLeftColumnIndex].style.color = "white";
+                        } else if (value >= 4 && value <= 9) {
+                            cells[daysLeftColumnIndex].style.backgroundColor = "orange";
+                            cells[daysLeftColumnIndex].style.color = "white";
+                        } else if (value >= 2 && value <= 3) {
+                            cells[daysLeftColumnIndex].style.backgroundColor = "yellow";
+                            cells[daysLeftColumnIndex].style.color = "black";
+                        } else if (value <= 1) {
+                            cells[daysLeftColumnIndex].style.backgroundColor = "red";
+                            cells[daysLeftColumnIndex].style.color = "white";
+                        }
+                    }
                 }
-            }
-        }
-    });
-});
-
-
-
+            });
+        });
     </script>
 
-    <!-- Include Bootstrap JS and dependencies -->
+    <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

@@ -96,7 +96,7 @@ $conn->close();
     <h2><b>Marketing Department</b></h2>
     <hr />
 
-    <div class="table-div" style="overflow-x:auto;">
+    <div class="table-div" style="overflow-y:auto;">
         <table class="table">
             <thead>
                 <tr>

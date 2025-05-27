@@ -1,4 +1,7 @@
 <?php
+// // Start the session to use session variables
+// session_start();
+
 // Include the database connection
 include '../db.php'; 
 
@@ -18,10 +21,9 @@ FROM
 RIGHT JOIN 
     accounting a ON s.staff_ID = a.staff_ID
 ORDER BY 
-    s.staff_ID DESC;
+    a.poNumber DESC;
 ";
 $result = $conn->query($query);
-
 
 if ($result) {
     $accountingData = $result->fetch_all(MYSQLI_ASSOC);
@@ -38,17 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $poNumber = trim($_POST['poNumber'] ?? '');
     $receivedCopy = trim($_POST['receivedCopy'] ?? '');
     $paymentReceived = trim($_POST['paymentReceived'] ?? '');
-    $staff_ID = $_SESSION['staff_ID'];
+    $staff_ID = $_SESSION['staff_ID'] ?? null;
 
-    if ($poNumber !== '' && $receivedCopy !== '') {
+    if ($poNumber !== '' && $receivedCopy !== '' && $staff_ID !== null) {
         // Allow paymentReceived to be empty if receivedCopy != 'Completed'
         if ($receivedCopy !== 'Completed') {
             $paymentReceived = ''; // Ensure disabled paymentReceived is empty
         }
 
-        $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ?, staff_ID= ? WHERE poNumber = ?";
+        $updateQuery = "UPDATE accounting SET receivedCopy = ?, paymentReceived = ?, staff_ID = ? WHERE poNumber = ?";
         $stmt = $conn->prepare($updateQuery);
-        $stmt->bind_param("ssss", $receivedCopy, $paymentReceived, $staff_ID , $poNumber);
+        $stmt->bind_param("ssss", $receivedCopy, $paymentReceived, $staff_ID, $poNumber);
 
         if ($stmt->execute()) {
             $updateSuccess = true;
@@ -58,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
         $stmt->close();
     } else {
-        $updateError = "Invalid data received.";
+        $updateError = "Invalid data received or session staff_ID missing.";
     }
 }
 
@@ -104,10 +106,9 @@ $conn->close();
                             <td><?= htmlspecialchars($data['deadline']); ?></td>
                             <td><?= htmlspecialchars($data['daysLeft']); ?></td>
                             <td><?= htmlspecialchars($data['leadTime']); ?></td>
-                              <td><?= htmlspecialchars($data['fullname']); ?></td>
-                            
+                            <td><?= htmlspecialchars($data['fullname']); ?></td>
                             <td>
-                                   <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;s">
+                                <button data-toggle="modal" data-target="#editModal<?= $data['poNumber']; ?>" style="border: none;background-color:transparent;">
                                     <img src="../assets/edit2.png" alt="Edit" />
                                 </button>
                             </td>
@@ -127,7 +128,6 @@ $conn->close();
                                         <div class="modal-body">
                                             <input type="hidden" name="poNumber" value="<?= htmlspecialchars($data['poNumber']); ?>" />
 
-                                            <!-- Received Copy Dropdown -->
                                             <div class="form-group">
                                                 <label for="receivedCopy<?= htmlspecialchars($data['poNumber']); ?>">Received Copy</label>
                                                 <select class="form-control" name="receivedCopy" id="receivedCopy<?= htmlspecialchars($data['poNumber']); ?>" required>
@@ -137,11 +137,9 @@ $conn->close();
                                                 </select>
                                             </div>
 
-                                            <!-- Payment Received Dropdown -->
                                             <div class="form-group">
                                                 <label for="paymentReceived<?= htmlspecialchars($data['poNumber']); ?>">Payment Received</label>
                                                 <select class="form-control" name="paymentReceived" id="paymentReceived<?= htmlspecialchars($data['poNumber']); ?>" <?= $data['receivedCopy'] != 'Completed' ? 'disabled' : ''; ?>>
-                                                 
                                                     <option value="Not Started" <?= $data['paymentReceived'] == 'Not Started' ? 'selected' : ''; ?>>Not Started</option>
                                                     <option value="In Progress" <?= $data['paymentReceived'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
                                                     <option value="Completed" <?= $data['paymentReceived'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
@@ -159,89 +157,20 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="8">No data found in the Accounting Department.</td>
+                        <td colspan="9">No data found in the Accounting Department.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Apply background color to Days Left column (index 5)
-            const targetColumns = [5]; 
-            const rows = document.querySelectorAll("table tbody tr");
-
-            rows.forEach(row => {
-                const cells = row.querySelectorAll("td");
-
-                targetColumns.forEach(columnIndex => {
-                    if (cells[columnIndex]) {
-                        const value = parseInt(cells[columnIndex].textContent.trim(), 10);
-
-                        if (isNaN(value)) return;
-
-                        if (value > 10) {
-                            cells[columnIndex].style.backgroundColor = "green";
-                            cells[columnIndex].style.color = "white";
-                        } else if (value >= 4 && value <= 9) {
-                            cells[columnIndex].style.backgroundColor = "orange";
-                            cells[columnIndex].style.color = "white";
-                        } else if (value >= 2 && value <= 3) {
-                            cells[columnIndex].style.backgroundColor = "yellow";
-                            cells[columnIndex].style.color = "black";
-                        } else if (value <= 1) {
-                            cells[columnIndex].style.backgroundColor = "red";
-                            cells[columnIndex].style.color = "white";
-                        }
-                    }
-                });
-            });
-        });
-
-        // Enable/disable paymentReceived dropdown based on receivedCopy value
-        $(document).ready(function() {
-            $('.modal').each(function() {
-                const modal = $(this);
-                const receivedCopy = modal.find('select[name="receivedCopy"]');
-                const paymentReceived = modal.find('select[name="paymentReceived"]');
-
-                // Initial state on modal show
-                modal.on('show.bs.modal', function () {
-                    if (receivedCopy.val() === 'Completed') {
-                        paymentReceived.prop('disabled', false);
-                        if (!paymentReceived.val()) {
-                            paymentReceived.val('Not Started');
-                        }
-                    } else {
-                        paymentReceived.prop('disabled', true);
-                        paymentReceived.val('');
-                    }
-                });
-
-                // On change event for receivedCopy
-                receivedCopy.on('change', function() {
-                    if ($(this).val() === 'Completed') {
-                        paymentReceived.prop('disabled', false);
-                        if (!paymentReceived.val()) {
-                            paymentReceived.val('Not Started');
-                        }
-                    } else {
-                        paymentReceived.prop('disabled', true);
-                        paymentReceived.val('');
-                    }
-                });
-            });
-        });
-
         <?php if ($updateSuccess): ?>
             Swal.fire({
                 icon: 'success',
@@ -249,7 +178,6 @@ $conn->close();
                 text: 'Record updated successfully!',
                 confirmButtonColor: '#3085d6',
                 confirmButtonText: 'OK'
-           
             });
         <?php elseif ($updateError): ?>
             Swal.fire({
